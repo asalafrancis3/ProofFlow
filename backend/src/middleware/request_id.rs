@@ -46,7 +46,7 @@ where
     type Transform = RequestIdMiddlewareService<S>;
     type Future = std::future::Ready<Result<Self::Transform, Self::InitError>>;
 
-    fn new_service(&self, service: S) -> Self::Future {
+    fn new_transform(&self, service: S) -> Self::Future {
         std::future::ready(Ok(RequestIdMiddlewareService { service }))
     }
 }

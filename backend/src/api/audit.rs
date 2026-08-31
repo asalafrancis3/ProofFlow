@@ -102,7 +102,7 @@ pub async fn get_audit_entry(audit: web::Data<AuditService>, path: web::Path<Str
     let entry_id = path.into_inner();
     match audit.get_entry(&entry_id) {
         Some(entry) => HttpResponse::Ok().json(ApiBuilder::success_response(entry)),
-        None => HttpResponse::NotFound().json(ApiBuilder::error_response::<String>("Audit entry not found")),
+        None => HttpResponse::NotFound().json(ApiBuilder::error_response::<String>("not_found", "Audit entry not found", 404)),
     }
 }
 
@@ -118,13 +118,13 @@ pub async fn generate_audit_report(
     let start = match DateTime::parse_from_rfc3339(&body.start_date) {
         Ok(dt) => dt.to_utc(),
         Err(_) => {
-            return HttpResponse::BadRequest().json(ApiBuilder::error_response::<String>("Invalid start_date format"));
+            return HttpResponse::BadRequest().json(ApiBuilder::error_response::<String>("invalid_date", "Invalid start_date format", 400));
         }
     };
     let end = match DateTime::parse_from_rfc3339(&body.end_date) {
         Ok(dt) => dt.to_utc(),
         Err(_) => {
-            return HttpResponse::BadRequest().json(ApiBuilder::error_response::<String>("Invalid end_date format"));
+            return HttpResponse::BadRequest().json(ApiBuilder::error_response::<String>("invalid_date", "Invalid end_date format", 400));
         }
     };
 

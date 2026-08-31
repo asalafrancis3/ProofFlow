@@ -21,7 +21,7 @@ use super::errors::CryptoError;
 use super::types::{EncryptionParams, KeyMaterial, EncryptedData};
 
 // ============================================
-# Constants
+// Constants
 // ============================================
 
 /// AES-256-GCM key size in bytes
@@ -43,7 +43,7 @@ pub const DEFAULT_ALGORITHM: &str = "AES-256-GCM";
 pub const DEFAULT_HASH_ALGORITHM: &str = "Argon2id";
 
 // ============================================
-# Encryption Functions
+// Encryption Functions
 // ============================================
 
 /// Generate a cryptographically secure random key
@@ -129,7 +129,7 @@ pub fn verify(data: &[u8], hmac: &[u8], key: &[u8; KEY_SIZE]) -> Result<bool, Cr
 pub fn create_hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, CryptoError> {
     type HmacSha256 = Hmac<Sha256>;
     
-    let mut mac = HmacSha256::new_from_slice(key)
+    let mut mac = <HmacSha256 as hmac::Mac>::new_from_slice(key)
         .map_err(|_| CryptoError::HmacCreationFailed)?;
     
     mac.update(data);
@@ -140,7 +140,7 @@ pub fn create_hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, CryptoError> {
 pub fn verify_hmac(data: &[u8], hmac: &[u8], key: &[u8]) -> Result<(), CryptoError> {
     type HmacSha256 = Hmac<Sha256>;
     
-    let mut mac = HmacSha256::new_from_slice(key)
+    let mut mac = <HmacSha256 as hmac::Mac>::new_from_slice(key)
         .map_err(|_| CryptoError::HmacVerificationFailed)?;
     
     mac.update(data);
@@ -214,7 +214,7 @@ pub fn key_material(key: [u8; KEY_SIZE]) -> KeyMaterial {
 }
 
 // ============================================
-# Test Helpers
+// Test Helpers
 // ============================================
 
 #[cfg(test)]

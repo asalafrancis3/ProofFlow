@@ -36,6 +36,10 @@ base64 = "0.22"
 urlencoding = "2.1"
 url = "2"
 sha2 = "0.10"
+aes-gcm = "0.10"
+argon2 = "0.5"
+hmac = "0.12"
+redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
 
 # Removed as confirmed-unused by #1085 (no `use`/path reference anywhere in
 # src/ — verified by grepping every crate root against the source tree):

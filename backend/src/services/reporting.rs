@@ -79,17 +79,18 @@ impl ReportService for ReportingService {
         self.validate_request(&request)?;
 
         let report_id = uuid::Uuid::new_v4().to_string();
+        let format = request.format.clone();
 
         Ok(Report {
             id: report_id,
             report_type: request.report_type,
-            format: request.format,
+            format: format.clone(),
             status: "completed".to_string(),
             created_at: chrono::Utc::now().to_rfc3339(),
             file_url: Some(format!(
                 "https://storage.example.com/{}.{}",
                 uuid::Uuid::new_v4(),
-                request.format
+                format
             )),
         })
     }

@@ -35,7 +35,7 @@ pub struct SearchFilter {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "uppercase")]
+#[serde(rename_all = "UPPERCASE")]
 pub enum FilterOperator {
     And,
     Or,

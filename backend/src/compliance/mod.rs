@@ -8,5 +8,6 @@ pub mod validator;
 pub mod models;
 
 pub use service::ComplianceService;
+pub use service::{CheckRequest, ComplianceResult};
 pub use validator::ComplianceValidator;
 pub use models::*;

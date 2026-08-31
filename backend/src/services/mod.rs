@@ -26,8 +26,8 @@ pub use archival::{
 pub use archival_storage::{FileSystemArchivalStorage, S3ArchivalStorage};
 pub use audit::{AuditAction, AuditEntry, AuditEventType, AuditQuery, AuditService};
 pub use email::{EmailService, SendGridEmailService};
-pub use encryption::{DataEncryptionService, EncryptedData, EncryptionKey, EncryptionMetrics};
-pub use encryption_verification::EncryptionMonitoringService;
+pub use encryption::EncryptionService;
+pub use encryption_verification::VerificationService as EncryptionVerificationService;
 pub use export::{ExportData, ExportFormat, ExportService};
 pub use notifications::{FirebaseNotificationService, NotificationService};
 pub use reporting::{ReportService, ReportingService};

@@ -39,6 +39,7 @@ use actix_web::{
 };
 use bytes::Bytes;
 use futures::future::LocalBoxFuture;
+use futures::FutureExt;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -108,13 +109,13 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     B: MessageBody + 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<actix_web::body::BoxBody>;
     type Error = Error;
     type InitError = ();
     type Transform = IdempotencyService<S>;
     type Future = std::future::Ready<Result<Self::Transform, Self::InitError>>;
 
-    fn new_service(&self, service: S) -> Self::Future {
+    fn new_transform(&self, service: S) -> Self::Future {
         std::future::ready(Ok(IdempotencyService {
             service,
             store: self.store.clone(),
@@ -136,7 +137,7 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     B: MessageBody + 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<actix_web::body::BoxBody>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -145,7 +146,7 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         // Only intercept write methods
         if !is_write_method(req.method()) {
-            return Box::pin(self.service.call(req));
+            return Box::pin(self.service.call(req).map(|r| r.map(|res| res.map_into_boxed_body())));
         }
 
         // Extract key header
@@ -156,7 +157,7 @@ where
             .map(|s| s.to_string())
         {
             Some(k) => k,
-            None => return Box::pin(self.service.call(req)),
+            None => return Box::pin(self.service.call(req).map(|r| r.map(|res| res.map_into_boxed_body()))),
         };
 
         // Key too long → 400

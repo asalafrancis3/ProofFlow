@@ -103,7 +103,7 @@ pub async fn ws_handler(
 ) -> Result<HttpResponse, actix_web::Error> {
     if manager.is_shutting_down() {
         return Ok(
-            HttpResponse::ServiceUnavailable().json(ApiBuilder::error_response::<String>("server shutting down"))
+            HttpResponse::ServiceUnavailable().json(ApiBuilder::error_response::<String>("server_shutting_down", "server shutting down", 503))
         );
     }
 

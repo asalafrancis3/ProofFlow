@@ -13,17 +13,16 @@ use tracing::{info, warn};
 use chrono::Utc;
 
 use crate::{
-    auth::RequireAuth,
     cache::Cache,
-    error::ApiError,
-    services::api::{ApiBuilder, PaginatedResponse},
+    services::api::ApiBuilder,
+    services::email::EmailService,
+    services::email::TransactionalEmail,
     services::export::ExportService,
     validation::{error_response, validate_date_range, validate_export_format, validate_pagination, ValidationError},
-    AppState,
 };
 
 // ============================================
-# Types
+// Types
 // ============================================
 
 /// Export format options
@@ -91,8 +90,35 @@ pub struct ScheduledExportConfig {
     pub subject: Option<String>,
 }
 
+/// Export history entry
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExportHistoryEntry {
+    pub id: String,
+    pub format: String,
+    pub data_type: String,
+    pub status: String,
+    pub created_at: String,
+}
+
+/// Paginate a list of items
+fn paginate<T: Serialize>(items: &[T], page: u32, limit: u32) -> serde_json::Value {
+    let total = items.len() as u64;
+    let start = ((page - 1) * limit) as usize;
+    let end = std::cmp::min(start + limit as usize, items.len());
+    let page_items = if start < items.len() { &items[start..end] } else { &[] };
+    serde_json::json!({
+        "items": page_items,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "total_pages": (total as f64 / limit as f64).ceil() as u64,
+        }
+    })
+}
+
 // ============================================
-# Endpoint Handlers
+// Endpoint Handlers
 // ============================================
 
 /// Export data
@@ -167,7 +193,7 @@ pub async fn export_data(
             HttpResponse::Ok().json(ApiBuilder::success_response(response))
         }
         Err(e) => HttpResponse::InternalServerError()
-            .json(ApiBuilder::error_response::<String>(format!("Export failed: {}", e))),
+            .json(ApiBuilder::error_response::<String>("export_failed", &format!("Export failed: {}", e), 500)),
     }
 }
 
@@ -189,7 +215,7 @@ pub async fn download_export(
                 format!("attachment; filename=\"{}.csv\"", export_id),
             ))
             .body(data),
-        None => HttpResponse::NotFound().json(ApiBuilder::error_response::<String>("Export not found or expired")),
+        None => HttpResponse::NotFound().json(ApiBuilder::error_response::<String>("not_found", "Export not found or expired", 404)),
     }
 }
 
@@ -254,10 +280,10 @@ pub async fn send_export_email(
         match email_service.send_transactional(email).await {
             Ok(_) => {}
             Err(e) => {
-                return HttpResponse::InternalServerError().json(ApiBuilder::error_response::<String>(format!(
+                return HttpResponse::InternalServerError().json(ApiBuilder::error_response::<String>("email_failed", &format!(
                     "Failed to send email to {}: {}",
                     recipient, e
-                )));
+                ), 500));
             }
         }
     }
@@ -302,6 +328,14 @@ pub async fn create_scheduled_export(
     HttpResponse::Ok().json(ApiBuilder::success_response("Scheduled export created"))
 }
 
+/// List scheduled exports
+///
+/// GET /api/export/schedule
+pub async fn list_scheduled_exports() -> HttpResponse {
+    let items: Vec<serde_json::Value> = Vec::new();
+    HttpResponse::Ok().json(ApiBuilder::success_response(items))
+}
+
 /// Delete scheduled export
 /// 
 /// DELETE /api/export/schedule/{id}
@@ -314,7 +348,7 @@ pub async fn delete_scheduled_export(path: web::Path<String>) -> HttpResponse {
 }
 
 // ============================================
-# Route Registration
+// Route Registration
 // ============================================
 
 /// Configure export routes
@@ -331,7 +365,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 }
 
 // ============================================
-# Changelog
+// Changelog
 // ============================================
 
 ///

@@ -1,5 +1,6 @@
 use actix_web::{
     dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform},
+    body::EitherBody,
     Error, HttpResponse,
 };
 use futures::future::LocalBoxFuture;
@@ -13,13 +14,13 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type InitError = ();
     type Transform = ValidationMiddlewareService<S>;
     type Future = std::future::Ready<Result<Self::Transform, Self::InitError>>;
 
-    fn new_service(&self, service: S) -> Self::Future {
+    fn new_transform(&self, service: S) -> Self::Future {
         std::future::ready(Ok(ValidationMiddlewareService { service }))
     }
 }
@@ -33,7 +34,7 @@ where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
 
@@ -73,6 +74,6 @@ where
         }
 
         let fut = self.service.call(req);
-        Box::pin(async move { fut.await })
+        Box::pin(async move { fut.await.map(|res| res.map_into_left_body()) })
     }
 }

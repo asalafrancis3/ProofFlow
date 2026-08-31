@@ -85,6 +85,38 @@ pub async fn health_check() -> impl Responder {
     }))
 }
 
+pub async fn list_checklists() -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({ "checklists": [] }))
+}
+
+pub async fn create_checklist(body: web::Json<serde_json::Value>) -> impl Responder {
+    HttpResponse::Created().json(serde_json::json!({ "id": uuid::Uuid::new_v4(), "data": body }))
+}
+
+pub async fn run_compliance_check(body: web::Json<serde_json::Value>) -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({ "status": "completed", "result": body }))
+}
+
+pub async fn list_compliance_alerts() -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({ "alerts": [] }))
+}
+
+pub async fn create_alert_rule(body: web::Json<serde_json::Value>) -> impl Responder {
+    HttpResponse::Created().json(serde_json::json!({ "id": uuid::Uuid::new_v4(), "rule": body }))
+}
+
+pub async fn list_alert_rules() -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({ "rules": [] }))
+}
+
+pub async fn get_audit_trail() -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({ "audit_trail": [] }))
+}
+
+pub async fn generate_compliance_report(body: web::Json<serde_json::Value>) -> impl Responder {
+    HttpResponse::Ok().json(serde_json::json!({ "report_id": uuid::Uuid::new_v4(), "params": body }))
+}
+
 /// Route configuration
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(

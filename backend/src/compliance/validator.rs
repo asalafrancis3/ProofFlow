@@ -1,6 +1,7 @@
 //! Compliance validation logic
 
 use super::models::*;
+use super::service::CheckRequest;
 
 pub struct ComplianceValidator;
 

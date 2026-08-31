@@ -43,10 +43,6 @@ impl ComplianceReportingService {
     }
 
     pub fn generate_detailed_report(&mut self, checklist: &ComplianceChecklist) -> (ReportSummary, Vec<super::monitor::CheckResult>) {
-    pub fn generate_detailed_report(
-        &self,
-        checklist: &ComplianceChecklist,
-    ) -> (ReportSummary, Vec<super::monitor::CheckResult>) {
         let report = self.monitor.evaluate_checklist(checklist);
         (
             ReportSummary {

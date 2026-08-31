@@ -12,7 +12,7 @@ pub enum IndexingError {
     ElasticsearchError(String),
 
     #[error("Serialization error: {0}")]
-    SerializationError(#[from] serde_json::Error),
+    SerializationError(String),
 
     #[error("Batch processing error: {0}")]
     BatchError(String),
@@ -77,19 +77,19 @@ impl IndexingPipeline {
 
     /// Process a single batch
     async fn process_batch<T: Serialize>(&self, batch: &[(String, T)]) -> Result<BulkIndexResult, IndexingError> {
-        let mut body: Vec<Value> = Vec::new();
+        let mut body: Vec<String> = Vec::new();
 
         for (id, doc) in batch {
-            // Add index action
-            body.push(json!({
+            body.push(serde_json::to_string(&json!({
                 "index": {
                     "_index": self.index_name,
                     "_id": id
                 }
-            }));
+            })).map_err(|e| IndexingError::SerializationError(e.to_string()))?);
 
-            // Add document
-            body.push(serde_json::to_value(doc)?);
+            body.push(serde_json::to_string(&serde_json::to_value(doc)
+                .map_err(|e| IndexingError::SerializationError(e.to_string()))?)
+                .map_err(|e| IndexingError::SerializationError(e.to_string()))?);
         }
 
         let response = self
@@ -103,7 +103,7 @@ impl IndexingPipeline {
         let response_body: BulkResponse = response
             .json()
             .await
-            .map_err(|e| IndexingError::SerializationError(e))?;
+            .map_err(|e| IndexingError::SerializationError(e.to_string()))?;
 
         let mut result = BulkIndexResult::default();
 

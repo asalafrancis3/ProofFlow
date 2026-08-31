@@ -39,11 +39,10 @@ use std::rc::Rc;
 use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
 
-use crate::config::rate_limit::{RateLimitConfig, RateLimitSettings};
 use crate::redis::RedisClient;
 
 // ============================================
-# Rate Limit Tiers (from main branch)
+// Rate Limit Tiers (from main branch)
 // ============================================
 
 #[derive(Clone, Copy, Debug)]
@@ -190,7 +189,7 @@ impl RateLimitState {
 }
 
 // ============================================
-# Rate Limit Middleware
+// Rate Limit Middleware
 // ============================================
 
 /// Rate limit middleware
@@ -328,8 +327,8 @@ where
                     let h = res.headers_mut();
                     use actix_web::http::header::{HeaderName, HeaderValue};
                     let insert = |h: &mut actix_web::http::header::HeaderMap, k: &'static str, v: String| {
-                        if let (Ok(name), Ok(val)) = (HeaderName::from_static(k), HeaderValue::from_str(&v)) {
-                            h.insert(name, val);
+                        if let Ok(val) = HeaderValue::from_str(&v) {
+                            h.insert(HeaderName::from_static(k), val);
                         }
                     };
                     insert(h, "x-ratelimit-limit-minute", rpm);
@@ -341,7 +340,9 @@ where
             }
         }
     }
+}
 
+impl<S> RateLimitService<S> {
     fn config_for_path(&self, path: &str) -> RateLimitConfig {
         for route in &self.routes {
             if path.starts_with(&route.prefix) {
@@ -353,7 +354,7 @@ where
 }
 
 // ============================================
-# Helper Functions
+// Helper Functions
 // ============================================
 
 /// Get client identifier from request
@@ -391,13 +392,13 @@ async fn increment_request_count(
 ) -> Result<(), anyhow::Error> {
     let count = redis.incr(key).await?;
     if count == 1 {
-        redis.expire(key, window_secs as usize).await?;
+        redis.expire(key, window_secs as u64).await?;
     }
     Ok(())
 }
 
 // ============================================
-# Tests
+// Tests
 // ============================================
 
 #[cfg(test)]

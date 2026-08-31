@@ -152,6 +152,7 @@ impl TransactionSigningService {
         transaction_id: &str,
         request: SignatureRequest,
     ) -> Result<MultiSignatureSupport, String> {
+        let signer_id = request.signer_id.clone();
         let mut multi = self
             .multi_sig
             .lock()
@@ -172,7 +173,7 @@ impl TransactionSigningService {
         self.record_event(
             "multisig_add",
             transaction_id,
-            Some(request.signer_id.clone()),
+            Some(&signer_id),
             format!("signature added ({}/{})", current, multi.required_signatures),
         );
         self.multi_sig

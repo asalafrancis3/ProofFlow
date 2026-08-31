@@ -1,9 +1,9 @@
 [package]
-name = "stellar-scavngr-contract"
+name = "proofflow-contract"
 version = "0.1.0"
 edition = "2021"
-authors = ["Scavngr Team"]
-description = "Stellar Soroban smart contract for the Scavngr recycling platform"
+authors = ["ProofFlow contributors"]
+description = "Stellar Soroban smart contract for ProofFlow — verified work and programmable milestone settlement"
 license = "MIT"
 
 [lib]

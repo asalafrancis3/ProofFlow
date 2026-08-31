@@ -4,9 +4,12 @@
 pub mod api;
 pub mod cache;
 pub mod compliance;
+pub mod config;
 pub mod container;
+pub mod crypto;
 pub mod errors;
 pub mod middleware;
+pub mod redis;
 pub mod rpc;
 pub mod search;
 pub mod security;

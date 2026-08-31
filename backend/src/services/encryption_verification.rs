@@ -11,6 +11,13 @@ use crate::crypto::{
     EncryptedData, KeyMaterial, CryptoError,
 };
 
+const KEY_SIZE: usize = 32;
+
+fn key_to_array(key: &KeyMaterial) -> Result<[u8; KEY_SIZE], CryptoError> {
+    key.key.as_slice().try_into()
+        .map_err(|_| CryptoError::InvalidKeySize)
+}
+
 /// Service for verifying encrypted data
 pub struct VerificationService {
     // Configuration for verification
@@ -30,15 +37,13 @@ impl VerificationService {
 
     /// Verify encrypted data integrity
     pub fn verify_data(&self, data: &[u8], hmac: &[u8], key: &KeyMaterial) -> Result<bool, CryptoError> {
-        let key_array = key.key.as_slice().try_into()
-            .map_err(|_| CryptoError::InvalidKeySize)?;
+        let key_array = key_to_array(key)?;
         crypto_verify(data, hmac, &key_array)
     }
 
     /// Verify HMAC for data
     pub fn verify_hmac(&self, data: &[u8], hmac: &[u8], key: &KeyMaterial) -> Result<(), CryptoError> {
-        let key_array = key.key.as_slice().try_into()
-            .map_err(|_| CryptoError::InvalidKeySize)?;
+        let key_array = key_to_array(key)?;
         verify_hmac(data, hmac, &key_array)
     }
 
@@ -59,7 +64,7 @@ impl VerificationService {
 
     /// Derive a key from a password
     pub fn derive_key(&self, password: &str, salt: &[u8], output_len: usize) -> Result<Vec<u8>, CryptoError> {
-        let salt_array = salt.try_into()
+        let salt_array: [u8; 16] = salt.try_into()
             .map_err(|_| CryptoError::InvalidKeySize)?;
         derive_key(password, &salt_array, output_len)
     }

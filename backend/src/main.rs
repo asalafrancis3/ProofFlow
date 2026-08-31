@@ -1,9 +1,12 @@
 mod api;
 mod cache;
 mod compliance;
+mod config;
 mod container;
+mod crypto;
 mod errors;
 mod middleware;
+mod redis;
 mod rpc;
 mod search;
 mod security;
@@ -79,6 +82,11 @@ async fn main() -> std::io::Result<()> {
     info!("All services initialized via AppContainer (archival, cache, audit, websocket, verification)");
 
     let rate_limit_config = RateLimitConfig::default();
+    let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://localhost:6379".to_string());
+    let redis_client = redis::RedisClient::new(&redis_url).unwrap_or_else(|e| {
+        tracing::warn!(error = %e, "Failed to connect to Redis, rate limiting will use in-memory state");
+        redis::RedisClient::new("redis://localhost:6379").unwrap()
+    });
     let ws_manager = ws::WsConnectionManager::new();
     let csrf_secret = std::env::var("CSRF_SECRET").unwrap_or_else(|_| "change-me-in-production".to_string());
     let allowed_origins = std::env::var("ALLOWED_ORIGINS").unwrap_or_else(|_| "http://localhost:3000".to_string());
@@ -124,7 +132,7 @@ async fn main() -> std::io::Result<()> {
             // Because actix-web wraps in reverse, RequestIdMiddleware must be
             // registered *last* in the `.wrap()` chain so it executes *first*.
             .wrap(IdempotencyMiddleware::new())
-            .wrap(RateLimitMiddleware::new(rate_limit_config.clone()))
+            .wrap(RateLimitMiddleware::new(rate_limit_config.clone(), web::Data::new(redis_client.clone())))
             .wrap(ValidationMiddleware)
             .wrap(RequestIdMiddleware)
             .app_data(web::Data::new(email_service.clone()))
