@@ -1,32 +1,5 @@
-#360 Implement Multi-Signature Admin Operations
-Repo Avatar
-Xoulomon/Scavenger
-Labels: enhancement, smart-contract, security
-Priority: High
-Estimated Effort: 10-15 hours
-
-Description:
-Add multi-signature requirement for critical admin operations (transfer admin, set percentages, deactivate waste). Require M-of-N admin approvals.
-
-Acceptance Criteria:
-
- Add AdminProposal struct with proposal ID, action, approvers
- Add propose_admin_action(action) function
- Add approve_admin_proposal(proposal_id) function
- Add execute_admin_proposal(proposal_id) function
- Configurable threshold (e.g., 2-of-3)
- Proposal expiration after 7 days
- Emit ProposalCreated, ProposalApproved, ProposalExecuted events
- 15+ comprehensive tests
-Technical Details:
-
-Store proposals in Map
-Use bitflags or Vec for approver tracking
-Consider gas costs for proposal storage
-
 # Rust
 target/
-Cargo.lock
 **/*.rs.bk
 *.pdb
 
