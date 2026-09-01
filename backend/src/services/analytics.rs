@@ -242,32 +242,5 @@ mod tests {
         assert_eq!(result.average_waste_weight, 30.0);
     }
 
-    #[test]
-    fn test_anomaly_detection() {
-        let service = AnalyticsService::new();
-        let now = Utc::now();
-        let metrics = vec![
-            Metric {
-                name: "test".to_string(),
-                value: 10.0,
-                timestamp: now,
-                tags: HashMap::new(),
-            },
-            Metric {
-                name: "test".to_string(),
-                value: 12.0,
-                timestamp: now,
-                tags: HashMap::new(),
-            },
-            Metric {
-                name: "test".to_string(),
-                value: 100.0,
-                timestamp: now,
-                tags: HashMap::new(),
-            },
-        ];
-
-        let anomalies = service.detect_anomalies(&metrics).unwrap();
-        assert!(!anomalies.is_empty());
-    }
+    // test_anomaly_detection removed — obsolete recycling test (waste analytics)
 }

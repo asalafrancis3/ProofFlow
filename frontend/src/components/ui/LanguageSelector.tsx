@@ -1,5 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { Select } from './Select';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from './Select';
 import { getDirection } from '@/i18n/config';
 
 const languages = [
@@ -20,11 +26,17 @@ export function LanguageSelector() {
   };
 
   return (
-    <Select
-      value={i18n.language}
-      onValueChange={handleLanguageChange}
-      options={languages}
-      placeholder="Select language"
-    />
+    <Select value={i18n.language} onValueChange={handleLanguageChange}>
+      <SelectTrigger>
+        <SelectValue placeholder="Select language" />
+      </SelectTrigger>
+      <SelectContent>
+        {languages.map((lang) => (
+          <SelectItem key={lang.value} value={lang.value}>
+            {lang.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }

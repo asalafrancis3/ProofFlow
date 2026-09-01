@@ -1,8 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import {
   Users,
-  Package,
-  Gift,
   Settings,
   ShieldAlert,
   Activity,
@@ -14,8 +12,6 @@ export type AdminTab =
   | 'overview'
   | 'users'
   | 'disputes'
-  | 'wastes'
-  | 'incentives'
   | 'health'
   | 'config'
   | 'audit'
@@ -31,8 +27,6 @@ export const ADMIN_TABS: AdminTabConfig[] = [
   { id: 'overview', label: 'Overview', icon: <Activity className="h-4 w-4" /> },
   { id: 'users', label: 'Users', icon: <Users className="h-4 w-4" /> },
   { id: 'disputes', label: 'Disputes', icon: <AlertTriangle className="h-4 w-4" /> },
-  { id: 'wastes', label: 'Wastes', icon: <Package className="h-4 w-4" /> },
-  { id: 'incentives', label: 'Incentives', icon: <Gift className="h-4 w-4" /> },
   { id: 'health', label: 'System Health', icon: <Heart className="h-4 w-4" /> },
   { id: 'config', label: 'Config', icon: <Settings className="h-4 w-4" />, adminOnly: true },
   { id: 'audit', label: 'Audit Log', icon: <ShieldAlert className="h-4 w-4" /> },

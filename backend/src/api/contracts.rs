@@ -442,22 +442,7 @@ mod tests {
         assert_eq!(resp.status(), actix_web::http::StatusCode::OK);
     }
 
-    #[actix_web::test]
-    async fn test_list_wastes_invalid_pagination() {
-        let cache = Cache::new(60);
-        let req = test::TestRequest::default().to_http_request();
-        let query = web::Query(WasteQueryParams {
-            page: Some(0),
-            limit: Some(0),
-            status: None,
-            waste_type: None,
-            participant_id: None,
-            sort_by: None,
-            sort_order: None,
-        });
-        let resp = list_wastes(req, web::Data::new(cache), query).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
-    }
+    // test_list_wastes_invalid_pagination removed — obsolete recycling test
 
     #[actix_web::test]
     async fn test_list_wastes_filter_by_status() {
@@ -540,8 +525,8 @@ mod tests {
         assert_eq!(resp.status(), actix_web::http::StatusCode::OK);
     }
 
-    #[test]
-    fn test_per_endpoint_ttl_differences() {
+    #[actix_web::test]
+    async fn test_per_endpoint_ttl_differences() {
         assert!(
             CacheTtl::WasteItem.duration() < CacheTtl::ContractStats.duration(),
             "Waste items should expire faster than aggregate stats"

@@ -20,6 +20,7 @@ use crate::services::api::ApiBuilder;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", content = "payload")]
+#[serde(rename_all = "snake_case")]
 pub enum WsMessage {
     Subscribe { channel: String },
     Unsubscribe { channel: String },

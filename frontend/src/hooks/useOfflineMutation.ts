@@ -33,7 +33,7 @@ export function useOfflineMutation<TData = unknown, TError = unknown, TVariables
       }
 
       // Execute mutation normally when online
-      return options.mutationFn!(variables);
+      return options.mutationFn!(variables, undefined as never);
     },
   });
 

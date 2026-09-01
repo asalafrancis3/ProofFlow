@@ -36,10 +36,8 @@ pub struct Events;
 
 impl Events {
     pub fn job_created(env: &Env, job_id: u64, client: &Address, total_funded: u128) {
-        env.events().publish(
-            (JOB_CREATED, job_id),
-            (client.clone(), total_funded),
-        );
+        env.events()
+            .publish((JOB_CREATED, job_id), (client.clone(), total_funded));
     }
 
     pub fn job_funded(env: &Env, job_id: u64, amount: u128) {
@@ -59,38 +57,25 @@ impl Events {
     }
 
     pub fn milestone_created(env: &Env, job_id: u64, index: u32, amount: u128, worker: &Address) {
-        env.events().publish(
-            (MS_CREATED, job_id, index),
-            (worker.clone(), amount),
-        );
+        env.events()
+            .publish((MS_CREATED, job_id, index), (worker.clone(), amount));
     }
 
     pub fn milestone_submitted(env: &Env, job_id: u64, index: u32, worker: &Address) {
-        env.events().publish(
-            (MS_SUBMITTED, job_id, index),
-            worker.clone(),
-        );
+        env.events().publish((MS_SUBMITTED, job_id, index), worker.clone());
     }
 
     pub fn milestone_approved(env: &Env, job_id: u64, index: u32, verifier: &Address) {
-        env.events().publish(
-            (MS_APPROVED, job_id, index),
-            verifier.clone(),
-        );
+        env.events().publish((MS_APPROVED, job_id, index), verifier.clone());
     }
 
     pub fn milestone_rejected(env: &Env, job_id: u64, index: u32, verifier: &Address) {
-        env.events().publish(
-            (MS_REJECTED, job_id, index),
-            verifier.clone(),
-        );
+        env.events().publish((MS_REJECTED, job_id, index), verifier.clone());
     }
 
     pub fn milestone_released(env: &Env, job_id: u64, index: u32, amount: u128, worker: &Address) {
-        env.events().publish(
-            (MS_RELEASED, job_id, index),
-            (worker.clone(), amount),
-        );
+        env.events()
+            .publish((MS_RELEASED, job_id, index), (worker.clone(), amount));
     }
 
     pub fn escrow_created(env: &Env, job_id: u64) {
@@ -102,10 +87,8 @@ impl Events {
     }
 
     pub fn escrow_released(env: &Env, job_id: u64, milestone_idx: u32, amount: u128, recipient: &Address) {
-        env.events().publish(
-            (ESC_RELEASED, job_id, milestone_idx),
-            (recipient.clone(), amount),
-        );
+        env.events()
+            .publish((ESC_RELEASED, job_id, milestone_idx), (recipient.clone(), amount));
     }
 
     pub fn escrow_frozen(env: &Env, job_id: u64, dispute_id: u32) {
@@ -117,44 +100,29 @@ impl Events {
     }
 
     pub fn dispute_filed(env: &Env, job_id: u64, milestone_idx: u32, dispute_id: u32, raised_by: &Address) {
-        env.events().publish(
-            (DISP_FILED, job_id, milestone_idx, dispute_id),
-            raised_by.clone(),
-        );
+        env.events()
+            .publish((DISP_FILED, job_id, milestone_idx, dispute_id), raised_by.clone());
     }
 
     pub fn dispute_resolved(env: &Env, job_id: u64, milestone_idx: u32, dispute_id: u32, resolution: &Resolution) {
-        env.events().publish(
-            (DISP_RESOLVED, job_id, milestone_idx, dispute_id),
-            resolution.clone(),
-        );
+        env.events()
+            .publish((DISP_RESOLVED, job_id, milestone_idx, dispute_id), resolution.clone());
     }
 
     pub fn reputation_updated(env: &Env, address: &Address, old_score: u64, new_score: u64) {
-        env.events().publish(
-            (REP_UPDATED, address.clone()),
-            (old_score, new_score),
-        );
+        env.events()
+            .publish((REP_UPDATED, address.clone()), (old_score, new_score));
     }
 
     pub fn user_registered(env: &Env, address: &Address, role: &UserRole) {
-        env.events().publish(
-            (USR_REGISTERED, address.clone()),
-            role.clone(),
-        );
+        env.events().publish((USR_REGISTERED, address.clone()), role.clone());
     }
 
     pub fn verifier_added(env: &Env, address: &Address, added_by: &Address) {
-        env.events().publish(
-            (VER_ADDED, address.clone()),
-            added_by.clone(),
-        );
+        env.events().publish((VER_ADDED, address.clone()), added_by.clone());
     }
 
     pub fn verifier_removed(env: &Env, address: &Address, removed_by: &Address) {
-        env.events().publish(
-            (VER_REMOVED, address.clone()),
-            removed_by.clone(),
-        );
+        env.events().publish((VER_REMOVED, address.clone()), removed_by.clone());
     }
 }

@@ -10,6 +10,7 @@ pub enum Error {
     InvalidInput = 3,
     AlreadyInitialized = 4,
     ContractPaused = 5,
+    UserAlreadyRegistered = 6,
 
     // ── Job errors ───────────────────────────────────────────────────────────
     JobNotFound = 10,

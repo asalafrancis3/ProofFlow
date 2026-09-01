@@ -449,7 +449,7 @@ mod tests {
         let c = mw.config_for_path("/api/v1/contracts/wastes");
         assert_eq!(
             c.requests_per_minute,
-            RateLimitTier::Anonymous.config().requests_per_minute
+            RateLimitConfig::default().requests_per_minute
         );
     }
 
@@ -459,7 +459,7 @@ mod tests {
         let c = mw.config_for_path("/api/v1/search");
         assert_eq!(
             c.requests_per_minute,
-            RateLimitTier::Anonymous.config().requests_per_minute
+            RateLimitConfig::default().requests_per_minute
         );
     }
 

@@ -6,8 +6,6 @@ import {
   OverviewTab,
   UsersTab,
   DisputesTab,
-  WastesTab,
-  IncentivesTab,
   SystemHealthTab,
   ConfigTab,
   AuditLogTab,
@@ -65,8 +63,6 @@ export function AdminDashboardPage() {
         {activeTab === 'overview' && <OverviewTab />}
         {activeTab === 'users' && <UsersTab />}
         {activeTab === 'disputes' && <DisputesTab />}
-        {activeTab === 'wastes' && <WastesTab />}
-        {activeTab === 'incentives' && <IncentivesTab />}
         {activeTab === 'health' && <SystemHealthTab />}
         {activeTab === 'config' && isAdmin && <ConfigTab />}
         {activeTab === 'audit' && <AuditLogTab />}

@@ -17,9 +17,7 @@ import { getDB, setQueryData } from '@/lib/indexedDB'
 import '@/i18n/config'
 import './index.css'
 
-// Initialize Web Vitals monitoring
 initWebVitals((metric) => {
-  // Optionally send to analytics endpoint in production
   if (!import.meta.env.DEV) {
     try {
       navigator.sendBeacon('/api/metrics', JSON.stringify({
@@ -28,13 +26,12 @@ initWebVitals((metric) => {
         rating: metric.rating,
         timestamp: new Date().toISOString(),
       }))
-    } catch (error) {
+    } catch {
       // Silently fail in production
     }
   }
 })
 
-// Create a client
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => toast.error(getErrorMessage(error))
@@ -46,56 +43,48 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 24 * 60 * 60 * 1000, // 24 hours
+      staleTime: 5 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000,
     }
   }
 })
 
-// Set up persistence
 persistQueryClient({
   queryClient,
   persister: {
-    persistClient: async (client) => {
-      const _db = await getDB()
-      const queries = client.getQueryCache().getAll()
-      
+    persistClient: async (persistedClient) => {
+      await getDB()
+      const queries = persistedClient.clientState.queries
       for (const query of queries) {
-        if (query.state.status === 'success' && query.state.data) {
-          await setQueryData(
-            JSON.stringify(query.queryKey),
-            query.state.data,
-            query.queryKey as string[]
-          )
-        }
+        await setQueryData(
+          query.queryKey.join('/'),
+          query.state.data,
+          query.queryKey as string[]
+        )
       }
     },
     restoreClient: async () => {
-      const _db = await getDB()
-      const tx = _db.transaction('queries', 'readonly')
+      const db = await getDB()
+      const tx = db.transaction('queries', 'readonly')
       const store = tx.objectStore('queries')
-      
       const queries: Record<string, unknown> = {}
-      
       for await (const cursor of store) {
-        queries[cursor.key] = cursor.value
+        queries[cursor.key as string] = cursor.value
       }
-      
       await tx.done
-      return queries
+      return undefined
     },
     removeClient: async () => {
       const db = await getDB()
       await db.clear('queries')
     },
   },
-  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  maxAge: 24 * 60 * 60 * 1000,
 })
 
 function ThemedToaster() {
   const { resolvedTheme } = useTheme()
-
-  return <Toaster position="top-right" richColors closeButton theme={resolvedTheme} />
+  return <Toaster position="top-right" richColors closeButton theme={resolvedTheme as 'light' | 'dark'} />
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -103,23 +92,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <ErrorBoundary>
-          <WalletProvider>
-            <AuthProvider>
-              <ContractProvider>
-                <App />
-                <Toaster position="top-right" richColors closeButton />
-              </ContractProvider>
-            </AuthProvider>
-          </WalletProvider>
           <StoreProvider>
-            <AuthProvider>
-              <WalletProvider>
+            <WalletProvider>
+              <AuthProvider>
                 <ContractProvider>
                   <App />
                   <ThemedToaster />
                 </ContractProvider>
-              </WalletProvider>
-            </AuthProvider>
+              </AuthProvider>
+            </WalletProvider>
           </StoreProvider>
         </ErrorBoundary>
       </ThemeProvider>

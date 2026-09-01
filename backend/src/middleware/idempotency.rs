@@ -249,8 +249,8 @@ mod tests {
         HttpResponse::Ok().json(serde_json::json!({"count": n}))
     }
 
-    fn app_with_counter() -> (Arc<AtomicU32>, actix_web::dev::ServiceFactory<ServiceRequest>) {
-        // Returns counter and closure – used via test::init_service
+    fn app_with_counter() -> Arc<AtomicU32> {
+        // Returns counter – used via test::init_service
         todo!() // placeholder; see individual tests below for inline approach
     }
 
@@ -355,8 +355,8 @@ mod tests {
         assert_eq!(counter.load(Ordering::SeqCst), 3, "GET should not be deduplicated");
     }
 
-    #[test]
-    fn cached_entry_expiry() {
+    #[actix_web::test]
+    async fn cached_entry_expiry() {
         let long_ago = Instant::now() - Duration::from_secs(200);
         let entry = Cached {
             status: StatusCode::OK,

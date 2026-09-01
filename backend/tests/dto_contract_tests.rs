@@ -30,10 +30,10 @@
 /// 1. Add a Rust struct/serde snapshot test below.
 /// 2. Update the `packages/types/src/index.ts` interface if necessary.
 /// 3. Update [`docs/DTO_CONTRACT_ALIGNMENT.md`] alignment table.
-use scavenger_backend::services::verification::{
+use proofflow_backend::services::verification::{
     Document, ParticipantVerification, VerificationChecklist, VerificationStatus,
 };
-use scavenger_backend::services::{
+use proofflow_backend::services::{
     ArchivalService, ArchiveRecord, ArchiveStatus, RetentionPolicy, StorageTier,
 };
 use std::collections::HashMap;

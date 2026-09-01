@@ -4,7 +4,7 @@
  * Manages wallet-based authentication state:
  *   address, name, role, and session loading.
  *
- * Persisted to localStorage under 'scavngr_user'.
+ * Persisted to localStorage under 'proofflow_user'.
  */
 
 export interface AuthUser {
@@ -24,7 +24,7 @@ export type AuthAction =
   | { type: 'AUTH_LOGIN'; payload: AuthUser }
   | { type: 'AUTH_LOGOUT' }
 
-const STORAGE_KEY = 'scavngr_user'
+const STORAGE_KEY = 'proofflow_user'
 
 export const authInitialState: AuthState = {
   user: null,

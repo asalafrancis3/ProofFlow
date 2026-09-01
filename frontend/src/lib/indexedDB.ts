@@ -19,6 +19,10 @@ interface ScavengerDB extends DBSchema {
       status: 'pending' | 'synced' | 'failed'
       retryCount: number
     }
+    indexes: {
+      status: 'pending' | 'synced' | 'failed'
+      timestamp: number
+    }
   }
   cache: {
     key: string
@@ -36,22 +40,18 @@ export function getDB() {
   if (!dbPromise) {
     dbPromise = openDB<ScavengerDB>('scavenger-db', 1, {
       upgrade(db) {
-        // Queries store for React Query persistence
         if (!db.objectStoreNames.contains('queries')) {
           db.createObjectStore('queries')
         }
 
-        // Mutations store for offline queue
         if (!db.objectStoreNames.contains('mutations')) {
           const mutationsStore = db.createObjectStore('mutations', { keyPath: 'id' })
           mutationsStore.createIndex('status', 'status')
           mutationsStore.createIndex('timestamp', 'timestamp')
         }
 
-        // General cache store
         if (!db.objectStoreNames.contains('cache')) {
-          const cacheStore = db.createObjectStore('cache')
-          cacheStore.createIndex('expiresAt', 'expiresAt')
+          db.createObjectStore('cache')
         }
       },
     })
@@ -59,7 +59,6 @@ export function getDB() {
   return dbPromise
 }
 
-// Query persistence functions
 export async function setQueryData(key: string, data: unknown, queryKey: string[]) {
   const db = await getDB()
   await db.put('queries', {
@@ -88,7 +87,6 @@ export async function clearExpiredQueries() {
   const keysToDelete: string[] = []
 
   for await (const cursor of store) {
-    // Remove queries older than 24 hours
     if (now - cursor.value.timestamp > 24 * 60 * 60 * 1000) {
       keysToDelete.push(cursor.key)
     }
@@ -98,7 +96,6 @@ export async function clearExpiredQueries() {
   await tx.done
 }
 
-// Mutation queue functions
 export async function addMutationToQueue(mutation: {
   id: string
   mutationKey: string[]
@@ -151,7 +148,6 @@ export async function clearOldMutations() {
   const keysToDelete: string[] = []
 
   for await (const cursor of store) {
-    // Remove mutations older than 7 days
     if (now - cursor.value.timestamp > 7 * 24 * 60 * 60 * 1000) {
       keysToDelete.push(cursor.key)
     }
@@ -161,7 +157,6 @@ export async function clearOldMutations() {
   await tx.done
 }
 
-// General cache functions
 export async function setCacheData(key: string, data: unknown, ttl?: number) {
   const db = await getDB()
   await db.put('cache', {
@@ -189,12 +184,11 @@ export async function clearExpiredCache() {
   const db = await getDB()
   const tx = db.transaction('cache', 'readwrite')
   const store = tx.objectStore('cache')
-  const index = store.index('expiresAt')
 
   const now = Date.now()
   const keysToDelete: string[] = []
 
-  for await (const cursor of index) {
+  for await (const cursor of store) {
     if (cursor.value.expiresAt && now > cursor.value.expiresAt) {
       keysToDelete.push(cursor.key)
     }

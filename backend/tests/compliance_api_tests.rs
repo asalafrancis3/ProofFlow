@@ -16,7 +16,7 @@
 use actix_web::{test, web, App};
 use serde_json::Value;
 
-use scavenger_backend::api::compliance_api::{
+use proofflow_backend::api::compliance_api::{
     create_alert_rule, create_checklist, generate_compliance_report, get_audit_trail, list_alert_rules,
     list_checklists, list_compliance_alerts, run_compliance_check,
 };

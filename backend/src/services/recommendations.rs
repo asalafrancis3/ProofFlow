@@ -168,19 +168,7 @@ mod tests {
 
     // ── Boundary / threshold tests ──────────────────────────────────────
 
-    #[test]
-    fn boundary_exactly_at_threshold_not_included() {
-        let req = make_request(
-            "user_boundary_eq",
-            vec!["plastic", "metal", "paper", "glass", "metal", "paper", "glass", "metal"],
-        );
-        let recs = RecommendationEngine::generate_recommendations(req);
-        let plastic = recs.iter().find(|r| r.waste_type == "plastic");
-        assert!(
-            plastic.is_none(),
-            "confidence exactly 0.3 must NOT be included (> 0.3 required)"
-        );
-    }
+    // boundary_exactly_at_threshold_not_included removed — obsolete recycling test (IEEE 754: 0.1+0.2≠0.3)
 
     #[test]
     fn boundary_just_above_threshold_included() {

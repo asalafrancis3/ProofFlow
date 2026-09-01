@@ -17,13 +17,6 @@ import {
 
 const LS_KEY = (addr: string) => `scavngr_gamification_${addr}`
 
-function _loadEarnedIds(addr: string): string[] {
-  try {
-    const raw = localStorage.getItem(LS_KEY(addr))
-    return raw ? (JSON.parse(raw) as string[]) : []
-  } catch { return [] }
-}
-
 function saveEarnedIds(addr: string, ids: string[]): void {
   localStorage.setItem(LS_KEY(addr), JSON.stringify(ids))
 }

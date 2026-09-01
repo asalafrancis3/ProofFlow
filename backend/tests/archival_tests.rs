@@ -1,4 +1,4 @@
-use scavenger_backend::services::{
+use proofflow_backend::services::{
     ArchivalService, ArchiveQuery, ArchiveStatus, FileSystemArchivalStorage, RetentionPolicy, StorageTier,
 };
 use std::sync::Arc;

@@ -123,7 +123,7 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn verify_signature_missing_transaction_id_returns_400() {
+    async fn verify_signature_missing_transaction_id_returns_422() {
         let body = web::Json(VerifyRequest {
             transaction_id: "".to_string(),
             signature: "abc123sig".to_string(),
@@ -131,11 +131,11 @@ mod tests {
             data: "deadbeef".to_string(),
         });
         let resp = verify_signature(body).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
-    async fn verify_signature_missing_signature_returns_400() {
+    async fn verify_signature_missing_signature_returns_422() {
         let body = web::Json(VerifyRequest {
             transaction_id: "tx-001".to_string(),
             signature: "".to_string(),
@@ -143,11 +143,11 @@ mod tests {
             data: "deadbeef".to_string(),
         });
         let resp = verify_signature(body).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
-    async fn verify_signature_missing_signer_id_returns_400() {
+    async fn verify_signature_missing_signer_id_returns_422() {
         let body = web::Json(VerifyRequest {
             transaction_id: "tx-001".to_string(),
             signature: "abc123sig".to_string(),
@@ -155,11 +155,11 @@ mod tests {
             data: "deadbeef".to_string(),
         });
         let resp = verify_signature(body).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
-    async fn verify_signature_missing_data_returns_400() {
+    async fn verify_signature_missing_data_returns_422() {
         let body = web::Json(VerifyRequest {
             transaction_id: "tx-001".to_string(),
             signature: "abc123sig".to_string(),
@@ -167,11 +167,11 @@ mod tests {
             data: "".to_string(),
         });
         let resp = verify_signature(body).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
-    async fn verify_signature_all_fields_whitespace_returns_400() {
+    async fn verify_signature_all_fields_whitespace_returns_422() {
         let body = web::Json(VerifyRequest {
             transaction_id: "   ".to_string(),
             signature: "   ".to_string(),
@@ -179,7 +179,7 @@ mod tests {
             data: "   ".to_string(),
         });
         let resp = verify_signature(body).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     // ── get_documentation ────────────────────────────────────────────────────

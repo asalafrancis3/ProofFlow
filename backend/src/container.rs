@@ -123,7 +123,7 @@ impl AppContainer {
     pub fn from_env() -> Result<Self, String> {
         let email_service: Arc<dyn EmailService> = Arc::new(SendGridEmailService::new(
             std::env::var("SENDGRID_API_KEY").unwrap_or_default(),
-            std::env::var("FROM_EMAIL").unwrap_or_else(|_| "noreply@scavenger.io".to_string()),
+            std::env::var("FROM_EMAIL").unwrap_or_else(|_| "noreply@proofflow.io".to_string()),
         ));
 
         let notification_service: Arc<dyn NotificationService> = Arc::new(FirebaseNotificationService::new(

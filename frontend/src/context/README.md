@@ -5,8 +5,8 @@ across two layers, chosen by what the state represents:
 
 ## Server-cache state → `@tanstack/react-query`
 
-Anything fetched from the Soroban contract or backend (participants, wastes,
-incentives, transfer history, dashboard stats) lives in React Query, via the
+Anything fetched from the Soroban contract or backend (users, jobs, milestones,
+escrow, disputes, reputation, activity) lives in React Query, via the
 hooks in `frontend/src/hooks/`. React Query already owns caching, refetching,
 and invalidation for this data — it should never be copied into a Context.
 

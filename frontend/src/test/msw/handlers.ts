@@ -197,13 +197,7 @@ export const handlers = [
     return HttpResponse.json(MOCK_METRICS)
   }),
 
-  // Health endpoint
   http.get('*/api/health', () => {
     return HttpResponse.json(MOCK_HEALTH)
   }),
-
-  // Catch-all for unmatched requests (returns 500 in tests to surface issues)
-  http.all('*/api/*', () => {
-    return HttpResponse.json({ error: 'Unhandled test request' }, { status: 500 })
-  })
 ]

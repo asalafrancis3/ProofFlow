@@ -61,7 +61,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       attribute="class"
       defaultTheme="system"
       enableSystem
-      storageKey="scavngr-theme"
+      storageKey="proofflow-theme"
       // transitions are handled via CSS + theme-ready class instead
       {...props}
     >

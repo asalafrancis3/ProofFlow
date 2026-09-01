@@ -58,7 +58,8 @@ export function clearLocaleOverride(): void {
 }
 
 // Formatters moved to lib/format.ts
-export { formatCurrency, formatNumber, formatDate } from './format'
+import { formatNumber } from './format'
+export { formatCurrency } from './format'
 
 const KG_TO_LB = 2.20462
 const KM_TO_MI = 0.621371

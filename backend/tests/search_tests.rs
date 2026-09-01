@@ -1,4 +1,4 @@
-use scavenger_backend::search::{
+use proofflow_backend::search::{
     field_builders, Facet, FacetType, FacetedSearch, IndexConfig, IndexMapping, IndexingPipeline, SearchClient,
     SearchClientConfig, SearchFilter, SearchIndex, SearchQueryBuilder,
 };
@@ -62,7 +62,7 @@ fn test_multi_match_query() {
 
 #[test]
 fn test_bool_query_builder() {
-    use scavenger_backend::search::query_builder::QueryType;
+    use proofflow_backend::search::query_builder::QueryType;
 
     let must_queries = vec![QueryType::Term {
         field: "status".to_string(),
@@ -94,19 +94,19 @@ fn test_search_filters() {
     let filter = SearchFilter::term("status", json!("active"));
     assert!(matches!(
         filter.filter,
-        scavenger_backend::search::FilterType::Term { .. }
+        proofflow_backend::search::FilterType::Term { .. }
     ));
 
     let range_filter = SearchFilter::range("price", Some(json!(10)), Some(json!(100)));
     assert!(matches!(
         range_filter.filter,
-        scavenger_backend::search::FilterType::Range { .. }
+        proofflow_backend::search::FilterType::Range { .. }
     ));
 
     let exists_filter = SearchFilter::exists("email");
     assert!(matches!(
         exists_filter.filter,
-        scavenger_backend::search::FilterType::Exists { .. }
+        proofflow_backend::search::FilterType::Exists { .. }
     ));
 }
 

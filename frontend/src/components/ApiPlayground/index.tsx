@@ -71,14 +71,16 @@ export const ApiPlayground: React.FC<{ baseUrl?: string }> = ({
 
       const method = request.method as 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-      const result = await client[method.toLowerCase() as 'get' | 'post' | 'put' | 'patch' | 'delete'](
-        request.url,
-        // For methods with body, pass body as second arg; otherwise pass options directly
-        ...(method !== 'GET' && method !== 'DELETE'
-          ? [body, { headers: extraHeaders, params, bearerToken }]
-          : [{ headers: extraHeaders, params, bearerToken }]
-        ) as [unknown, ...unknown[]]
-      );
+      const result = method === 'GET' || method === 'DELETE'
+        ? await client[method.toLowerCase() as 'get' | 'delete'](
+            request.url,
+            { headers: extraHeaders, params, bearerToken }
+          )
+        : await client[method.toLowerCase() as 'post' | 'put' | 'patch'](
+            request.url,
+            body,
+            { headers: extraHeaders, params, bearerToken }
+          )
 
       res = {
         status: result.status,

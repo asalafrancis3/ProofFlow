@@ -3,12 +3,12 @@
 //! These tests verify that the encryption and verification services
 //! work together correctly and detect tampering.
 
-use scavenger_backend::crypto::{
+use proofflow_backend::crypto::{
     encrypt, decrypt, verify,
     generate_key, create_hmac, verify_hmac,
     EncryptedData,
 };
-use scavenger_backend::services::{
+use proofflow_backend::services::{
     EncryptionService,
     VerificationService,
 };
@@ -118,7 +118,7 @@ fn test_hmac_verification_flow() {
 
 #[test]
 fn test_algorithm_consistency() {
-    use scavenger_backend::crypto::types::EncryptionParams;
+    use proofflow_backend::crypto::types::EncryptionParams;
     
     let params = crate::crypto::primitives::default_params();
     assert_eq!(params.algorithm, "AES-256-GCM");

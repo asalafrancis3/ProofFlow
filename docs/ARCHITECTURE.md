@@ -1,601 +1,201 @@
-# Scavngr System Architecture
+# ProofFlow Architecture
 
 ## Overview
 
-Scavngr is a decentralized recycling platform built on Stellar blockchain using Soroban smart contracts. The system connects recyclers, collectors, and manufacturers in a transparent supply chain with built-in incentive mechanisms.
+ProofFlow is a decentralized verification and milestone settlement protocol on Stellar/Soroban. It enables structured job contracts with escrow, evidence-based milestone approval, independent verification, dispute arbitration, and on-chain reputation.
 
-## System Architecture Diagram
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Frontend Layer                           │
-│  (React, TypeScript, Vite)                                  │
-│  - User Interface                                           │
-│  - Wallet Integration (Freighter)                           │
-│  - Transaction Management                                  │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  API Layer (Backend)                         │
-│  (Rust, Actix-web)                                          │
-│  - REST Endpoints                                           │
-│  - Request Validation                                       │
-│  - Rate Limiting                                            │
-│  - Caching                                                  │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Soroban Smart Contract Layer                    │
-│  (Rust, Soroban SDK)                                        │
-│  - Participant Management                                  │
-│  - Waste Tracking                                           │
-│  - Incentive Management                                     │
-│  - Reward Distribution                                      │
-│  - Statistics & Metrics                                     │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Stellar Blockchain Network                      │
-│  - Testnet / Mainnet                                        │
-│  - Soroban RPC                                              │
-│  - Transaction Settlement                                  │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Component Interaction Diagram
+## System Layers
 
 ```
-User
-  │
-  ├─► Frontend (React)
-  │     │
-  │     ├─► Wallet (Freighter)
-  │     │     │
-  │     │     └─► Sign Transactions
-  │     │
-  │     └─► API Client
-  │           │
-  │           ▼
-  │     Backend API (Rust)
-  │           │
-  │           ├─► Validation
-  │           ├─► Caching
-  │           └─► Rate Limiting
-  │                 │
-  │                 ▼
-  │     Soroban Contract
-  │           │
-  │           ├─► Participant Storage
-  │           ├─► Waste Storage
-  │           ├─► Incentive Storage
-  │           ├─► Transfer History
-  │           └─► Statistics
-  │                 │
-  │                 ▼
-  │     Stellar Blockchain
-  │           │
-  │           ├─► Ledger State
-  │           ├─► Event Logs
-  │           └─► Transaction History
-  │
-  └─► Indexer (TypeScript)
-        │
-        ├─► Event Listener
-        ├─► Data Aggregation
-        └─► Analytics
+┌─────────────────────────────────────────────────────────────────┐
+│                       Frontend (React/Vite)                      │
+│  Pages: Dashboard, Jobs, Create Job, Job Detail, Verification,  │
+│         Reputation, Activity, Settings, Admin                    │
+│  Infrastructure: React Query, Wallet Integration, Auth, PWA     │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ REST API
+┌──────────────────────────▼──────────────────────────────────────┐
+│                     Backend (Actix-Web)                          │
+│  Routes: 17 REST endpoints (proofflow.rs)                       │
+│  Services: Domain model, Error hierarchy, Contract adapter      │
+│  Middleware: Rate limiting, Idempotency, CORS, Auth             │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ Contract calls / Event subscription
+┌──────────────────────────▼──────────────────────────────────────┐
+│               Indexer (Event → State)                            │
+│  Decoder: 21 event types with typed payloads                    │
+│  Processor: Deterministic state transitions                     │
+│  Persistence: Redis/Postgres projections                        │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ Soroban SDK
+┌──────────────────────────▼──────────────────────────────────────┐
+│              Stellar Contract (Soroban/Rust)                     │
+│  Modules: types, errors, events, validation, storage, lib       │
+│  Entry points: 14 mutations, 7 queries                          │
+│  Storage: Deterministic composite keys                          │
+│  Events: 21 typed event symbols                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Data Flow Diagram
+## Domain Model
 
-### Waste Submission Flow
+### Entities
 
-```
-Recycler
-  │
-  ├─ Submit Waste
-  │   │
-  │   ▼
-  │ Frontend validates input
-  │   │
-  │   ▼
-  │ Create transaction
-  │   │
-  │   ▼
-  │ Sign with wallet
-  │   │
-  │   ▼
-  │ Submit to Soroban
-  │   │
-  │   ▼
-  │ Contract validates
-  │   │
-  │   ├─ Check participant registered
-  │   ├─ Validate coordinates
-  │   ├─ Validate weight
-  │   │
-  │   ▼
-  │ Store waste record
-  │   │
-  │   ▼
-  │ Emit WasteRegistered event
-  │   │
-  │   ▼
-  │ Indexer captures event
-  │   │
-  │   ▼
-  │ Update analytics
-  │   │
-  │   ▼
-  │ Frontend updates UI
-```
+| Entity | Description |
+|--------|-------------|
+| **User** | Registered participant with a role (Client, Worker, Verifier, Arbitrator, Admin) |
+| **Job** | Work definition with title, description, milestones, and funding status |
+| **Milestone** | Discrete unit of work within a job, with amount, worker, and status |
+| **Escrow** | Per-job fund tracking (funded, released, frozen amounts) |
+| **Dispute** | Disagreement on a milestone, with resolution workflow |
+| **Reputation** | On-chain scoring based on completed jobs, attestations, disputes |
 
-### Reward Distribution Flow
+### State Machines
 
-```
-Manufacturer
-  │
-  ├─ Create Incentive
-  │   │
-  │   ▼
-  │ Contract stores incentive
-  │   │
-  │   ▼
-  │ Emit IncentiveCreated event
-  │
-Collector
-  │
-  ├─ Verify Waste
-  │   │
-  │   ▼
-  │ Contract marks verified
-  │   │
-  │   ▼
-  │ Emit WasteVerified event
-  │
-Manufacturer
-  │
-  ├─ Distribute Rewards
-  │   │
-  │   ▼
-  │ Contract calculates:
-  │   ├─ Waste weight × incentive points
-  │   ├─ Collector percentage split
-  │   ├─ Owner percentage split
-  │   │
-  │   ▼
-  │ Deduct from incentive budget
-  │   │
-  │   ▼
-  │ Emit RewardDistributed event
-  │   │
-  │   ▼
-  │ Update participant stats
+**Job**: `Draft → Funded → Active → InReview → Settled` (or `Cancelled`/`Disputed`)
+
+**Milestone**: `Pending → Submitted → Approved → Released` (or `Rejected`/`Disputed`)
+
+**Escrow**: `Created → Funded → PartialRelease → Completed` (or `Frozen`)
+
+**Dispute**: `Filed → UnderReview → Resolved`
+
+### Roles
+
+| Role | Permissions |
+|------|------------|
+| **Client** | Create jobs, fund escrow, approve milestones |
+| **Worker** | Submit milestone evidence |
+| **Verifier** | Attest to milestone completion |
+| **Arbitrator** | Resolve disputes |
+| **Admin** | Register users, manage system |
+
+## Contract Architecture
+
+### Storage Keys
+
+All storage uses deterministic composite keys:
+
+```rust
+// User storage
+user_key(address) → (Symbol, Address)
+
+// Job storage
+job_key(job_id) → (Symbol, u64)
+
+// Milestone storage
+milestone_key(job_id, idx) → (Symbol, u64, u32)
+
+// Escrow storage
+escrow_key(job_id) → (Symbol, u64)
+
+// Dispute storage
+dispute_key(job_id, dispute_id) → (Symbol, u64, u32)
+
+// Reputation storage
+reputation_key(address) → (Symbol, Address)
 ```
 
-## Database Schema
+### Event Architecture
 
-### Participants Table
+21 event types with ≤9-character symbols:
 
-```sql
-CREATE TABLE participants (
-  address TEXT PRIMARY KEY,
-  role INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  latitude INTEGER NOT NULL,
-  longitude INTEGER NOT NULL,
-  registered_at BIGINT NOT NULL,
-  active BOOLEAN DEFAULT true
-);
-```
+| Symbol | Event |
+|--------|-------|
+| `JOB_CR` | JobCreated |
+| `JOB_FND` | JobFunded |
+| `JOB_ACT` | JobActivated |
+| `JOB_CNC` | JobCancelled |
+| `JOB_STL` | JobSettled |
+| `MS_CR` | MilestoneCreated |
+| `MS_SUB` | MilestoneSubmitted |
+| `MS_APR` | MilestoneApproved |
+| `MS_REJ` | MilestoneRejected |
+| `MS_RLS` | MilestoneReleased |
+| `ESC_CR` | EscrowCreated |
+| `ESC_FND` | EscrowFunded |
+| `ESC_RLS` | EscrowReleased |
+| `ESC_FRZ` | EscrowFrozen |
+| `ESC_UNF` | EscrowUnfrozen |
+| `DISP_FL` | DisputeFiled |
+| `DISP_RS` | DisputeResolved |
+| `REP_UPD` | ReputationUpdated |
+| `USR_REG` | UserRegistered |
+| `VER_ADD` | VerifierAdded |
+| `VER_REM` | VerifierRemoved |
 
-### Wastes Table
+### Authorization Model
 
-```sql
-CREATE TABLE wastes (
-  id BIGINT PRIMARY KEY,
-  waste_type INTEGER NOT NULL,
-  weight NUMERIC NOT NULL,
-  owner TEXT NOT NULL REFERENCES participants(address),
-  latitude INTEGER NOT NULL,
-  longitude INTEGER NOT NULL,
-  created_at BIGINT NOT NULL,
-  confirmed BOOLEAN DEFAULT false,
-  active BOOLEAN DEFAULT true
-);
-```
+- `create_job`: Contract admin OR registered Client role
+- `fund_job`: Job client only
+- `submit_milestone`: Assigned worker only
+- `approve_milestone`: Job client OR registered Verifier
+- `release_payment`: Contract admin only
+- `file_dispute`: Assigned worker OR job client
+- `resolve_dispute`: Registered Arbitrator only
 
-### Incentives Table
+## Backend Architecture
 
-```sql
-CREATE TABLE incentives (
-  id BIGINT PRIMARY KEY,
-  manufacturer TEXT NOT NULL REFERENCES participants(address),
-  waste_type INTEGER NOT NULL,
-  reward_points NUMERIC NOT NULL,
-  budget NUMERIC NOT NULL,
-  spent NUMERIC DEFAULT 0,
-  active BOOLEAN DEFAULT true,
-  created_at BIGINT NOT NULL
-);
-```
+### API Layer
 
-### Transfer History Table
+17 REST routes organized by domain:
 
-```sql
-CREATE TABLE transfer_history (
-  id BIGINT PRIMARY KEY,
-  waste_id BIGINT NOT NULL REFERENCES wastes(id),
-  from_address TEXT NOT NULL REFERENCES participants(address),
-  to_address TEXT NOT NULL REFERENCES participants(address),
-  latitude INTEGER NOT NULL,
-  longitude INTEGER NOT NULL,
-  note TEXT,
-  transferred_at BIGINT NOT NULL
-);
-```
+| Domain | Routes |
+|--------|--------|
+| User | `POST /register`, `GET /user/:addr` |
+| Job | `POST /jobs`, `GET /jobs`, `GET /jobs/:id`, `PATCH /jobs/:id/activate`, `PATCH /jobs/:id/cancel` |
+| Milestone | `GET /jobs/:id/milestones`, `POST /jobs/:id/milestones/:idx/submit`, `POST /jobs/:id/milestones/:idx/approve`, `POST /jobs/:id/milestones/:idx/reject` |
+| Escrow | `GET /escrow/:job_id`, `POST /escrow/:job_id/fund`, `POST /escrow/:job_id/release` |
+| Dispute | `POST /disputes`, `GET /disputes/:id`, `POST /disputes/:id/resolve` |
+| Reputation | `GET /reputation/:addr` |
+| System | `GET /health` |
 
-### Statistics Table
+### Error Architecture
 
-```sql
-CREATE TABLE participant_stats (
-  participant TEXT PRIMARY KEY REFERENCES participants(address),
-  total_wastes BIGINT DEFAULT 0,
-  total_weight NUMERIC DEFAULT 0,
-  total_tokens NUMERIC DEFAULT 0,
-  verified_count BIGINT DEFAULT 0,
-  last_updated BIGINT NOT NULL
-);
-```
-
-## Smart Contract Architecture
-
-### Module Structure
+Structured error hierarchy with HTTP status code mapping:
 
 ```
-stellar-contract/
-├── src/
-│   ├── lib.rs              # Main contract entry point
-│   ├── types.rs            # Data structures
-│   ├── events.rs           # Event definitions
-│   ├── validation.rs       # Input validation
-│   ├── errors.rs           # Error types
-│   ├── audit_log.rs        # Audit logging
-│   └── search.rs           # Query helpers
-└── tests/
-    ├── integration_test.rs
-    ├── waste_registration_flow_test.rs
-    ├── incentive_management_test.rs
-    └── ... (60+ test files)
+ServiceError
+├── Contract (RpcError, ContractError)
+├── Validation (MissingField, InvalidFormat, OutOfRange)
+├── Auth (Unauthorized, Forbidden, AdminRequired)
+├── Not Found (UserNotFound, JobNotFound, ...)
+├── Conflict (AlreadyRegistered, AlreadySubmitted, ...)
+├── State (WrongJobStatus, WrongMilestoneStatus, ...)
+└── Infrastructure (DatabaseError, Timeout, RateLimited)
 ```
 
-### Storage Layout
+## Frontend Architecture
+
+### Pages
+
+| Page | Purpose |
+|------|---------|
+| LandingPage | Public marketing page |
+| LoginPage | Wallet connect + role selection |
+| DashboardPage | Role-aware overview with stats |
+| JobsPage | Filterable job list |
+| CreateJobPage | Multi-milestone job creation |
+| JobDetailPage | Job overview + milestone management |
+| VerificationPage | Review queue for verifiers |
+| ReputationPage | User reputation display |
+| ActivityPage | Activity feed |
+| SettingsPage | User settings |
+| AdminDashboardPage | Admin overview |
+
+### Data Flow
 
 ```
-Contract Storage
-├── Admin
-│   └── admin_address: Address
-├── Configuration
-│   ├── charity_contract: Address
-│   ├── token_address: Address
-│   ├── collector_percentage: u32
-│   └── owner_percentage: u32
-├── Participants
-│   ├── participants: Map<Address, Participant>
-│   └── participant_wastes: Map<Address, Vec<u64>>
-├── Wastes
-│   ├── wastes: Map<u64, Waste>
-│   ├── waste_counter: u64
-│   └── transfer_history: Map<u64, Vec<TransferRecord>>
-├── Incentives
-│   ├── incentives: Map<u64, Incentive>
-│   ├── incentive_counter: u64
-│   └── incentives_by_type: Map<u32, Vec<u64>>
-└── Metrics
-    ├── global_metrics: GlobalMetrics
-    └── participant_stats: Map<Address, ParticipantStats>
+Page → useQuery/useMutation → API Client → REST → Backend → Contract/Adapter
 ```
 
-### Key Functions
+React Query handles caching, invalidation, and optimistic updates.
 
-#### Participant Management
-- `initialize_admin()` - One-time admin setup
-- `register_participant()` - Register new participant
-- `update_role()` - Change participant role
-- `deregister_participant()` - Remove participant
+## Testing
 
-#### Waste Management
-- `submit_material()` - Submit single waste
-- `submit_materials_batch()` - Batch submission
-- `verify_material()` - Verify waste quality
-- `transfer_waste()` - Transfer between participants
-- `confirm_waste_details()` - Confirm details
-- `deactivate_waste()` - Admin deactivation
-
-#### Incentive Management
-- `create_incentive()` - Create new incentive
-- `update_incentive()` - Modify incentive
-- `deactivate_incentive()` - Deactivate incentive
-- `distribute_rewards()` - Distribute rewards
-
-#### Query Functions
-- `get_participant()` - Get participant info
-- `get_waste()` - Get waste details
-- `get_incentive_by_id()` - Get incentive
-- `get_metrics()` - Get global metrics
-- `get_stats()` - Get participant stats
-
-## Security Architecture
-
-### Access Control
-
-```
-┌─────────────────────────────────────────┐
-│         Access Control Matrix           │
-├─────────────────────────────────────────┤
-│ Function          │ Admin │ Owner │ Any │
-├─────────────────────────────────────────┤
-│ initialize_admin  │  ✓    │   -   │  -  │
-│ transfer_admin    │  ✓    │   -   │  -  │
-│ set_charity       │  ✓    │   -   │  -  │
-│ set_token         │  ✓    │   -   │  -  │
-│ deactivate_waste  │  ✓    │   -   │  -  │
-│ register_part.    │  -    │   -   │  ✓  │
-│ submit_material   │  -    │   ✓   │  -  │
-│ transfer_waste    │  -    │   ✓   │  -  │
-│ verify_material   │  -    │   -   │  ✓  │
-│ create_incentive  │  -    │   ✓*  │  -  │
-└─────────────────────────────────────────┘
-* Manufacturer only
-```
-
-### Validation Layers
-
-```
-Input Validation
-├── Type Checking
-│   ├── Address format
-│   ├── Numeric ranges
-│   └── String length
-├── Business Logic
-│   ├── Participant exists
-│   ├── Role permissions
-│   ├── Waste ownership
-│   └── Transfer validity
-└── Constraint Checking
-    ├── Coordinate bounds
-    ├── Weight limits
-    ├── Budget availability
-    └── Status transitions
-```
-
-### Reentrancy Protection
-
-```
-Reentrancy Guard
-├── Flag-based guard
-├── Prevents recursive calls
-├── Applied to:
-│   ├── distribute_rewards()
-│   ├── donate_to_charity()
-│   └── reward_tokens()
-└── Atomic operations
-```
-
-## Deployment Architecture
-
-### Network Topology
-
-```
-┌──────────────────────────────────────────────────────┐
-│                  Stellar Network                      │
-├──────────────────────────────────────────────────────┤
-│                                                      │
-│  ┌─────────────────┐         ┌─────────────────┐   │
-│  │   Testnet       │         │    Mainnet      │   │
-│  ├─────────────────┤         ├─────────────────┤   │
-│  │ Soroban RPC     │         │ Soroban RPC     │   │
-│  │ Contract ID: ... │         │ Contract ID: ... │   │
-│  │ Validators: 5   │         │ Validators: 19  │   │
-│  └─────────────────┘         └─────────────────┘   │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-         ▲                              ▲
-         │                              │
-    ┌────┴──────────┐          ┌────────┴──────┐
-    │   Frontend    │          │   Frontend    │
-    │   (Testnet)   │          │   (Mainnet)   │
-    └───────────────┘          └───────────────┘
-```
-
-### Deployment Process
-
-```
-1. Development
-   ├─ Write contract code
-   ├─ Run local tests
-   └─ Build WASM
-
-2. Testnet Deployment
-   ├─ Optimize WASM
-   ├─ Deploy to testnet
-   ├─ Run integration tests
-   ├─ Audit contract
-   └─ Get community feedback
-
-3. Mainnet Deployment
-   ├─ Security audit
-   ├─ Final testing
-   ├─ Deploy to mainnet
-   ├─ Monitor metrics
-   └─ Maintain & update
-```
-
-## Scalability Considerations
-
-### Current Limitations
-
-- **Storage**: Soroban ledger state size
-- **Throughput**: ~1,000 TPS per Stellar validator
-- **Latency**: ~5-10 seconds per transaction
-
-### Optimization Strategies
-
-1. **Batch Operations**
-   - Combine multiple submissions
-   - Reduce transaction count
-   - Lower fees
-
-2. **Caching Layer**
-   - Cache frequently accessed data
-   - Reduce RPC calls
-   - Improve response time
-
-3. **Indexing**
-   - Off-chain event indexing
-   - Fast queries
-   - Analytics
-
-4. **Sharding** (Future)
-   - Multiple contract instances
-   - Partition by waste type
-   - Parallel processing
-
-## Monitoring & Observability
-
-### Metrics Collected
-
-```
-Contract Metrics
-├── Transaction Count
-├── Gas Usage
-├── Error Rates
-├── Latency
-└── State Size
-
-Application Metrics
-├── API Response Time
-├── Request Rate
-├── Cache Hit Rate
-├── Error Rate
-└── Active Users
-
-Business Metrics
-├── Total Waste Submitted
-├── Total Rewards Distributed
-├── Active Participants
-├── Incentive Budget Used
-└── Supply Chain Efficiency
-```
-
-### Logging Strategy
-
-```
-Log Levels
-├── ERROR: Contract failures, validation errors
-├── WARN: Budget exhaustion, deactivations
-├── INFO: Transactions, state changes
-└── DEBUG: Detailed execution flow
-
-Log Destinations
-├── Console (development)
-├── File (production)
-├── CloudWatch (AWS)
-└── Datadog (monitoring)
-```
-
-## Disaster Recovery
-
-### Backup Strategy
-
-```
-Daily Backups
-├── Contract state snapshot
-├── Database backup
-├── Event logs
-└── Configuration
-
-Recovery Procedures
-├── State restoration
-├── Transaction replay
-├── Consistency verification
-└── Validation
-```
-
-### Failover Plan
-
-```
-Primary Failure
-├── Detect failure (5 min timeout)
-├── Switch to backup RPC
-├── Verify state consistency
-├── Resume operations
-└── Alert team
-```
-
-## Design Patterns Used
-
-### 1. Storage Pattern
-- Efficient key-value storage
-- Indexed lookups
-- Batch operations
-
-### 2. Event-Driven Architecture
-- Contract emits events
-- Indexer listens
-- Off-chain processing
-
-### 3. Role-Based Access Control
-- Admin functions
-- Owner-only operations
-- Public queries
-
-### 4. State Machine
-- Waste status transitions
-- Incentive lifecycle
-- Participant states
-
-### 5. Reward Distribution
-- Percentage-based splits
-- Budget tracking
-- Atomic transfers
-
-## Architecture Decision Records (ADRs)
-
-This document describes **how** the system is built. The decision log records **why**,
-including the alternatives that were rejected and the costs each choice carries.
-
-➡️ **[Architecture Decision Records](./adr/README.md)**
-
-| # | Decision | Area |
-|---|----------|------|
-| [0001](./adr/0001-use-soroban-for-smart-contracts.md) | Use Soroban and Rust for the on-chain contract | Contract |
-| [0002](./adr/0002-off-chain-event-driven-indexing.md) | Serve queries from an off-chain event-driven indexer | Indexer |
-| [0003](./adr/0003-percentage-based-reward-distribution.md) | Distribute rewards by configurable percentage | Contract |
-| [0004](./adr/0004-contract-storage-key-layout.md) | Tier contract storage by access pattern, with typed tuple keys | Contract |
-| [0005](./adr/0005-indexer-relational-schema.md) | Project events into a normalised Postgres schema, keeping raw events | Indexer |
-| [0006](./adr/0006-wallet-based-authentication-flow.md) | Authenticate with wallet signatures; treat frontend session state as UI only | Frontend / Auth |
-
-ADRs 0001–0003 were previously recorded inline in this document and now live in the
-log, keeping their original numbering. Changes that contradict an Accepted ADR should
-be raised in review; changes that supersede one should ship with a new ADR.
-
-New decisions start from [`docs/adr/template.md`](./adr/template.md).
-
----
-
-## Related Documentation
-
-- [Architecture Decision Records](./adr/README.md)
-- [API Reference](./API_REFERENCE.md)
-- [API Documentation](./API_DOCUMENTATION.md)
-- [Database Schema](./DATABASE_SCHEMA.md)
-- [User Guide](./USER_GUIDE.md)
-- [Security Audit Report](./SECURITY_AUDIT.md)
-- [Deployment Guide](./KUBERNETES_DEPLOYMENT.md)
-
----
-
-Last updated: July 24, 2026
+| Layer | Framework | Count |
+|-------|-----------|-------|
+| Contract unit tests | `cargo test` | 55 |
+| Backend unit tests | `cargo test` | 393+ |
+| Frontend critical tests | Vitest | 11 |
+| API contract alignment | Manual verification | 16 types |

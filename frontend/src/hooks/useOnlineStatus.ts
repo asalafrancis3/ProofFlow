@@ -61,6 +61,8 @@ export function useConnectionQuality() {
         connection.removeEventListener('change', updateConnectionInfo);
       };
     }
+
+    return undefined;
   }, []);
 
   return connectionInfo;

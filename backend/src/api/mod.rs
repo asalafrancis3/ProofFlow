@@ -4,6 +4,7 @@ pub mod compliance_api;
 pub mod contracts;
 pub mod export;
 pub mod pagination;
+pub mod proofflow;
 pub mod search;
 pub mod signing_api;
 pub mod verification;

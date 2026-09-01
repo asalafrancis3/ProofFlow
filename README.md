@@ -1,194 +1,159 @@
-# Scavngr - Stellar Recycling Platform
+# ProofFlow
 
-A decentralized recycling platform built on Stellar blockchain using Soroban smart contracts. Scavngr connects recyclers, collectors, and manufacturers in a transparent and efficient ecosystem.
+A decentralized verification and milestone settlement protocol built on Stellar/Soroban. ProofFlow enables clients to define jobs with structured milestones, fund escrow, and settle payments upon cryptographic verification of completed work.
 
-## Architecture Diagram
+## Overview
 
-![Scavngr System Architecture](docs/architecture-diagram.svg)
+ProofFlow connects **clients** (who create jobs), **workers** (who complete milestones), **verifiers** (who attest to completion), and **arbitrators** (who resolve disputes) through a transparent, blockchain-backed settlement system.
 
-> Full-size diagram: [`docs/architecture-diagram.svg`](docs/architecture-diagram.svg)  
-> Shows all components (Frontend, Backend, Contract, Indexer, Stellar Network), participant roles, and data-flow for key operations (recycle, transfer, reward distribution).
+### Key Concepts
 
-## Documentation
+- **Jobs** — Define work with multiple milestones and payment terms
+- **Milestones** — Discrete units of work with evidence submission and approval flows
+- **Escrow** — Per-job fund management with partial release on milestone completion
+- **Verification** — Independent attestations from registered verifiers
+- **Disputes** — Arbitrated resolution when parties disagree
+- **Reputation** — On-chain scoring based on job completion, attestations, and dispute history
 
-| Document | Description |
-|----------|-------------|
-| [Architecture Diagram](docs/architecture-diagram.svg) | Visual overview of all system components and data flow |
-| [Local Dev Setup Guide](docs/local-dev-setup.md) | Complete local development setup covering all four workspaces |
-| [API Reference Guide](docs/API_REFERENCE_GUIDE.md) | Comprehensive contract function reference with examples and quick reference cards |
-| [Deployment Runbook](docs/DEPLOYMENT_RUNBOOK.md) | Step-by-step testnet and mainnet deployment with rollback procedures |
-| [Troubleshooting Guide](docs/TROUBLESHOOTING_GUIDE.md) | Common errors, debugging tips, and performance tuning |
-| [User Guide](docs/USER_GUIDE.md) | End-user guide for the platform |
-| [Security Audit](docs/SECURITY_AUDIT.md) | Security audit findings and mitigations |
+## Architecture
+
+```
+┌─────────────┐     ┌─────────────┐     ┌──────────────────┐
+│   Frontend   │────▶│   Backend    │────▶│ Stellar Contract  │
+│  React/Vite  │     │  Actix-Web   │     │    Soroban/Rust   │
+└─────────────┘     └──────┬──────┘     └──────────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │   Indexer    │
+                    │ Event→State  │
+                    └─────────────┘
+```
 
 ## Project Structure
 
 ```
-Scavenger/
-├── stellar-contract/      # Soroban smart contract (Rust) - canonical implementation
+├── stellar-contract/      # Soroban smart contract (Rust)
 │   ├── src/
-│   │   ├── lib.rs        # Main contract implementation
-│   │   ├── types.rs      # Types: ParticipantRole, Waste, Incentive, GlobalMetrics, etc.
-│   │   ├── events.rs     # Contract event emitters
-│   │   └── validation.rs # Input validation helpers
-│   ├── tests/            # Integration and unit tests
+│   │   ├── lib.rs         # Core contract + 55 unit tests
+│   │   ├── types.rs       # Domain structs and enums
+│   │   ├── errors.rs      # Typed error variants
+│   │   ├── events.rs      # Event emission (21 event types)
+│   │   └── validation.rs  # Input validation helpers
 │   └── Cargo.toml
-├── frontend/             # React frontend (to be implemented)
-├── Cargo.toml           # Workspace configuration
-├── soroban.toml         # Soroban CLI configuration
-└── README.md
+├── backend/               # Actix-Web REST API + indexer
+│   ├── src/
+│   │   ├── api/proofflow.rs   # 17 REST routes
+│   │   ├── contracts/         # Contract adapter
+│   │   ├── indexer/           # Event decoder + processor
+│   │   └── services/domain.rs # Domain models
+│   └── Cargo.toml
+├── frontend/              # React SPA (Vite + React Query)
+│   ├── src/
+│   │   ├── pages/         # 11 ProofFlow pages
+│   │   ├── hooks/         # React Query hooks
+│   │   ├── api/           # API client + types
+│   │   └── components/    # UI components
+│   └── package.json
+└── docs/                  # Documentation
+    ├── DOMAIN_MODEL.md
+    ├── ARCHITECTURE.md
+    ├── CONTRIBUTOR_ROADMAP.md
+    └── ...
 ```
-
-## Features
-
-- **Role-Based Participant System**: Recycler, Collector, and Manufacturer roles
-- **Participant Registration**: On-chain participant management
-- **Role Validation**: Permission checks for different actions
-- **Soroban Storage**: Efficient on-chain data storage
 
 ## Getting Started
 
+### Prerequisites
+
+- Rust stable (1.96+)
+- Node.js 18+ with pnpm
+- Stellar CLI (for contract deployment)
+
+### Local Development
+
 ```bash
-git clone https://github.com/YOUR_USERNAME/Scavenger.git
+# Clone
+git clone https://github.com/florence2peter/Scavenger.git
 cd Scavenger
-cp frontend/.env.example .env
-docker compose up -d
+
+# Contract
+cargo test --manifest-path stellar-contract/Cargo.toml
+
+# Backend
+cargo test --manifest-path backend/Cargo.toml
+
+# Frontend
+cd frontend
+pnpm install
+pnpm exec vite build
+pnpm exec vitest run
 ```
 
-That brings up Stellar standalone, Postgres, Redis, the backend, the indexer, and the
-frontend. You still need to deploy the contract and set `CONTRACT_ID` before contract
-calls work.
+### Contract Tests
 
-➡️ **[Developer Onboarding Guide](docs/DEVELOPER_ONBOARDING.md#development-environment-setup)** — the canonical setup path
-
-It covers prerequisites, both the Docker and run-it-directly paths, every environment
-variable, per-component run commands, a verification checklist, and troubleshooting
-for contracts, indexer, frontend, backend, and mobile.
-
-Related: [Local Dev Setup](docs/local-dev-setup.md) · [Docker specifics](docs/DEV_ENVIRONMENT.md) · [Contributing](CONTRIBUTING.md) · [Architecture](docs/ARCHITECTURE.md) · [API Reference](docs/API_REFERENCE.md)
+```bash
+cargo test --manifest-path stellar-contract/Cargo.toml
+# Expected: 55 passed, 0 failed
+```
 
 ## Contract API
 
-### ParticipantRole Enum
+### Roles
 
 ```rust
-pub enum ParticipantRole {
-    Recycler = 0,      // Can collect and process recyclables
-    Collector = 1,     // Can collect materials
-    Manufacturer = 2,  // Can manufacture products
+pub enum UserRole {
+    Client,      // Creates jobs, funds escrow
+    Worker,      // Completes milestones
+    Verifier,    // Attests to milestone completion
+    Arbitrator,  // Resolves disputes
+    Admin,       // System administration
 }
 ```
 
-### Functions
+### Core Operations
 
-**Admin**
-- `initialize_admin(admin)` - Initialize contract admin (once)
-- `transfer_admin(current_admin, new_admin)` - Transfer admin rights
-- `set_charity_contract(admin, charity_address)` - Set charity address
-- `set_token_address(admin, token_address)` - Set reward token address
-- `set_percentages(admin, collector_pct, owner_pct)` - Set reward split percentages
+| Operation | Description |
+|-----------|-------------|
+| `create_job` | Create a job with milestones and payment terms |
+| `fund_job` | Deposit funds into job escrow |
+| `submit_milestone` | Worker submits evidence for a milestone |
+| `approve_milestone` | Client or verifier approves completed work |
+| `release_payment` | Release escrow funds for approved milestones |
+| `file_dispute` | Raise a dispute on a milestone |
+| `resolve_dispute` | Arbitrator resolves a dispute |
 
-**Participants**
-- `register_participant(address, role, name, lat, lon)` - Register participant
-- `get_participant(address)` - Get participant info
-- `get_participant_info(address)` - Get participant + stats
-- `update_role(address, new_role)` - Update participant role
-- `deregister_participant(address)` - Deregister participant
-- `is_participant_registered(address)` - Check registration
+### Read Operations
 
-**Waste / Materials**
-- `submit_material(submitter, waste_type, weight, lat, lon)` - Submit waste
-- `submit_materials_batch(submitter, materials)` - Batch submit
-- `verify_material(material_id, verifier)` - Verify a material
-- `transfer_waste(waste_id, from, to, lat, lon, note)` - Transfer waste
-- `confirm_waste_details(waste_id, confirmer)` - Confirm waste
-- `reset_waste_confirmation(waste_id, owner)` - Reset confirmation
-- `deactivate_waste(admin, waste_id)` - Deactivate waste
-- `get_waste(waste_id)` / `get_material(material_id)` - Get waste by ID
-- `get_participant_wastes(participant)` - List participant's waste IDs
-- `get_waste_transfer_history(waste_id)` - Get transfer history
-
-**Incentives**
-- `create_incentive(rewarder, waste_type, reward_points, budget)` - Create incentive
-- `update_incentive(incentive_id, rewarder, reward_points, budget)` - Update incentive
-- `deactivate_incentive(incentive_id, rewarder)` - Deactivate incentive
-- `get_incentive_by_id(incentive_id)` - Get incentive
-- `get_incentives(waste_type)` - Get active incentives by waste type
-- `get_active_incentives()` - Get all active incentives
-- `get_active_mfr_incentive(manufacturer, waste_type)` - Best incentive for manufacturer
-- `distribute_rewards(waste_id, incentive_id, manufacturer)` - Distribute supply chain rewards
-
-**Stats & Metrics**
-- `get_metrics()` - Global metrics (total wastes, total tokens)
-- `get_stats(participant)` - Participant recycling stats
-- `get_supply_chain_stats()` - Global supply chain stats
+| Query | Description |
+|-------|-------------|
+| `query_job` | Get job details and status |
+| `query_milestone` | Get milestone details |
+| `query_escrow` | Get escrow balance and status |
+| `query_dispute` | Get dispute details |
+| `query_reputation` | Get user reputation score |
 
 ## Environment Variables
 
-There are separate env files for the root/compose stack, the frontend, the indexer,
-and the mobile app. All of them are documented in one place:
-
-➡️ **[Developer Onboarding — Environment Variables](docs/DEVELOPER_ONBOARDING.md#environment-variables)**
+See [Developer Onboarding Guide](docs/DEVELOPER_ONBOARDING.md) for complete environment configuration.
 
 ## Development
 
 ```bash
-# Format code
 cargo fmt
-
-# Run linter
 cargo clippy
-
-# Watch for changes
-cargo watch -x test
+cargo test --manifest-path stellar-contract/Cargo.toml
 ```
 
-Per-component build, run, and test commands are in the
-[Local Run Commands](docs/DEVELOPER_ONBOARDING.md#local-run-commands) table.
+## Contributing
 
-## CI/CD
+See [Contributor Roadmap](docs/CONTRIBUTOR_ROADMAP.md) for available work.
 
-GitHub Actions automatically runs quality checks on all pushes and pull requests:
+## Provenance
 
-### Rust Checks
-- Code formatting (`cargo fmt`)
-- Linting with Clippy (`cargo clippy`)
-- Unit and integration tests
-- WASM build verification
-- Security audit with RustSec
+This project derives engineering infrastructure from [Scavngr](https://github.com/Xoulomon/Scavenger) (MIT License). The domain model, contract, events, workflows, and product identity have been substantially redesigned and implemented for ProofFlow.
 
-### Frontend Checks
-- Code formatting with Prettier
-- ESLint linting (max 0 warnings)
-- TypeScript type checking
-- Production build verification
-- npm security audit
-
-### Branch Protection
-Pull requests must pass all CI checks before merging. Configure branch protection rules:
-1. Go to Settings > Branches
-2. Add rule for `main` branch
-3. Enable "Require status checks to pass before merging"
-4. Select: `Rust Quality Checks`, `Frontend Quality Checks`, `Security Audit`
-5. Enable "Require branches to be up to date before merging"
+See [PROVENANCE.md](docs/PROVENANCE.md) for full provenance details.
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Configuration
-
-### TypeScript
-- Base config: `tsconfig.base.json`
-- Extended by each package
-- See `backend/tsconfig.json`, `frontend/tsconfig.json`, `indexer/tsconfig.json`
-
-### ESLint
-- Base config: `eslint.config.base.js`
-- Extended by each package
-- See `backend/eslint.config.js`, `frontend/eslint.config.js`, `indexer/eslint.config.js`
-
-### Adding a New Package
-1. Copy the `tsconfig.json` and `eslint.config.js` from an existing package
-2. Update the extends path if needed
-3. Add package-specific overrides
+MIT — see [LICENSE](LICENSE)

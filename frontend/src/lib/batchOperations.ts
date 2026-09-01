@@ -82,7 +82,7 @@ export class BatchOperationManager {
   }
 
   async executeOperation(
-    operation: string,
+    _operation: string,
     selectedIds: string[],
     _params?: Record<string, unknown>
   ): Promise<BatchActionResult> {

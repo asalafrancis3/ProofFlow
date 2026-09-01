@@ -333,7 +333,7 @@ mod tests {
             event_type: "security".to_string(),
             threshold: 10,
             time_window_minutes: 60,
-            notification_email: Some("admin@scavenger.io".to_string()),
+            notification_email: Some("admin@proofflow.io".to_string()),
             enabled: true,
         });
         let resp = create_alert_rule(web::Data::new(audit), body).await;

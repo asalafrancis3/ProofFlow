@@ -4,9 +4,9 @@ use actix_web::{test, web, App, HttpResponse};
 use serde_json::json;
 use std::time::Duration;
 
-use scavenger_backend::config::rate_limit::RateLimitConfig;
-use scavenger_backend::middleware::rate_limit::RateLimitMiddleware;
-use scavenger_backend::redis::RedisClient;
+use proofflow_backend::config::rate_limit::RateLimitConfig;
+use proofflow_backend::middleware::rate_limit::RateLimitMiddleware;
+use proofflow_backend::redis::RedisClient;
 
 #[tokio::test]
 async fn test_rate_limit_config() {

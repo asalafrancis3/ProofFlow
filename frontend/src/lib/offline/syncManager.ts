@@ -15,7 +15,7 @@ type SyncCallback = (mutation: QueuedMutation) => Promise<unknown>;
 export class SyncManager {
   private callbacks: Map<string, SyncCallback> = new Map();
   private isSyncing = false;
-  private syncPromise: Promise<void> | null = null;
+  private syncPromise: Promise<SyncResult> | null = null;
 
   /**
    * Register a mutation handler

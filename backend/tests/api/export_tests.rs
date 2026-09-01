@@ -4,11 +4,11 @@ use axum::http::StatusCode;
 use serde_json::json;
 use std::sync::Arc;
 
-use scavenger_backend::api::export::{
+use proofflow_backend::api::export::{
     ExportFormat, ExportQuery, ExportResponse,
     export_waste, export_users, export_analytics,
 };
-use scavenger_backend::AppState;
+use proofflow_backend::AppState;
 
 #[tokio::test]
 async fn test_export_waste_csv() {

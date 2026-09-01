@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export interface WasteFilter {
   wasteType?: string[];
@@ -58,11 +58,11 @@ const DEFAULT_PRESETS: FilterPreset[] = [
   },
 ];
 
-export const WasteFilterManager: React.FC<WasteFilterManagerProps> = ({
+export function useWasteFilterManager({
   onFilterChange,
   presets = DEFAULT_PRESETS,
   onSavePreset,
-}) => {
+}: WasteFilterManagerProps) {
   const [filters, setFilters] = useState<WasteFilter>({});
   const [savedPresets, setSavedPresets] = useState<FilterPreset[]>(presets);
 
@@ -119,4 +119,4 @@ export const WasteFilterManager: React.FC<WasteFilterManagerProps> = ({
   };
 };
 
-export default WasteFilterManager;
+export default useWasteFilterManager;

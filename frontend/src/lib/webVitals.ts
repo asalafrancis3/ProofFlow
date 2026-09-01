@@ -66,8 +66,8 @@ export function initWebVitals(
         const e = lastEntry as { renderTime?: number; loadTime?: number; id?: string }
         const lcp: WebVital = {
           name: 'LCP',
-          value: e.renderTime || e.loadTime,
-          rating: getRating(e.renderTime || e.loadTime, 'lcp'),
+          value: e.renderTime ?? e.loadTime ?? 0,
+          rating: getRating(e.renderTime ?? e.loadTime ?? 0, 'lcp'),
           id: e.id,
         }
         metrics.lcp = lcp
@@ -85,7 +85,7 @@ export function initWebVitals(
         for (const entry of list.getEntries()) {
           const e = entry as { hadRecentInput?: boolean; value?: number }
           if (!('hadRecentInput' in e) || !e.hadRecentInput) {
-            clsValue += e.value
+            clsValue += e.value ?? 0
           }
         }
         const cls: WebVital = {

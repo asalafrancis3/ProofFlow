@@ -75,7 +75,7 @@ export { useActiveIncentives } from '@/hooks/useActiveIncentives'
 export function useIncentives(wasteType: WasteType | undefined) {
   const client = useClient()
   return useQuery({
-    queryKey: cacheKeys.incentives(wasteType),
+    queryKey: cacheKeys.incentives(wasteType !== undefined ? String(wasteType) : undefined),
     queryFn: () => client.getIncentives(wasteType!),
     enabled: wasteType !== undefined,
     staleTime: 5 * 60_000,

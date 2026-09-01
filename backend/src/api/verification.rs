@@ -410,23 +410,23 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_start_verification_empty_id_returns_400() {
+    async fn test_start_verification_empty_id_returns_422() {
         let svc = mock_service();
         let req = web::Json(StartVerificationRequest {
             participant_id: "".to_string(),
         });
         let resp = start_verification(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
-    async fn test_start_verification_whitespace_id_returns_400() {
+    async fn test_start_verification_whitespace_id_returns_422() {
         let svc = mock_service();
         let req = web::Json(StartVerificationRequest {
             participant_id: "   ".to_string(),
         });
         let resp = start_verification(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     // ── submit_document ────────────────────────────────────────────────────
@@ -444,7 +444,7 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_submit_document_empty_participant_id_returns_400() {
+    async fn test_submit_document_empty_participant_id_returns_422() {
         let svc = mock_service();
         let req = web::Json(DocumentUploadRequest {
             participant_id: "".to_string(),
@@ -452,11 +452,11 @@ mod tests {
             url: "https://example.com/doc.pdf".to_string(),
         });
         let resp = submit_document(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
-    async fn test_submit_document_empty_doc_type_returns_400() {
+    async fn test_submit_document_empty_doc_type_returns_422() {
         let svc = mock_service();
         let req = web::Json(DocumentUploadRequest {
             participant_id: "participant-001".to_string(),
@@ -464,11 +464,11 @@ mod tests {
             url: "https://example.com/doc.pdf".to_string(),
         });
         let resp = submit_document(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
-    async fn test_submit_document_invalid_url_returns_400() {
+    async fn test_submit_document_invalid_url_returns_422() {
         let svc = mock_service();
         let req = web::Json(DocumentUploadRequest {
             participant_id: "participant-001".to_string(),
@@ -476,11 +476,11 @@ mod tests {
             url: "not-a-url".to_string(),
         });
         let resp = submit_document(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
-    async fn test_submit_document_empty_url_returns_400() {
+    async fn test_submit_document_empty_url_returns_422() {
         let svc = mock_service();
         let req = web::Json(DocumentUploadRequest {
             participant_id: "participant-001".to_string(),
@@ -488,7 +488,7 @@ mod tests {
             url: "".to_string(),
         });
         let resp = submit_document(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     // ── approve / reject ───────────────────────────────────────────────────
@@ -505,14 +505,14 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_approve_participant_missing_reviewer_id_returns_400() {
+    async fn test_approve_participant_missing_reviewer_id_returns_422() {
         let svc = mock_service();
         let req = web::Json(ApprovalRequest {
             participant_id: "participant-001".to_string(),
             reviewer_id: "".to_string(),
         });
         let resp = approve_participant(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     #[actix_web::test]
@@ -528,7 +528,7 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_reject_participant_missing_reason_returns_400() {
+    async fn test_reject_participant_missing_reason_returns_422() {
         let svc = mock_service();
         let req = web::Json(RejectionRequest {
             participant_id: "participant-001".to_string(),
@@ -536,7 +536,7 @@ mod tests {
             reviewer_id: "reviewer-001".to_string(),
         });
         let resp = reject_participant(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     // ── submit_checklist ───────────────────────────────────────────────────
@@ -555,14 +555,14 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn test_submit_checklist_empty_checks_returns_400() {
+    async fn test_submit_checklist_empty_checks_returns_422() {
         let svc = mock_service();
         let req = web::Json(ChecklistSubmitRequest {
             participant_id: "participant-001".to_string(),
             checks: HashMap::new(),
         });
         let resp = submit_checklist(req, svc).await;
-        assert_eq!(resp.status(), actix_web::http::StatusCode::BAD_REQUEST);
+        assert_eq!(resp.status(), actix_web::http::StatusCode::UNPROCESSABLE_ENTITY);
     }
 
     // ── URL/doc_type helper unit tests ────────────────────────────────────

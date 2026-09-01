@@ -1,4 +1,8 @@
-import { ContractConfig } from '../types';
+export interface ContractConfig {
+  contractId: string;
+  network: 'TESTNET' | 'MAINNET' | 'STANDALONE';
+  rpcUrl: string;
+}
 
 interface AppConfig {
   contract: ContractConfig;

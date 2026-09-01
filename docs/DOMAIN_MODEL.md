@@ -326,13 +326,14 @@ VERIFIER_REMOVED     { address, removed_by }
 
 ## Contract Invariants
 
-1. **No double settlement**: A milestone cannot be released twice.
-2. **No over-release**: Total escrow releases cannot exceed total funded.
-3. **Authorization**: Only authorized parties can modify state.
-4. **State transitions**: Invalid state transitions are rejected.
-5. **Dispute isolation**: A disputed milestone's escrow is frozen independently.
-6. **Settlement idempotency**: Releasing an already-released milestone is a no-op.
-7. **Verifier authorization**: Only whitelisted verifiers can attest.
-8. **Escrow accounting**: `total_funded == total_released + total_frozen + remaining`.
-9. **Reputation integrity**: Reputation updates only occur after valid settlement.
-10. **Replay protection**: Each transaction nonce can only be used once.
+1. **No double settlement**: A milestone cannot be released twice. Releasing an already-released milestone returns `MilestoneAlreadyReleased` error.
+2. **No over-release**: Total escrow releases cannot exceed total funded. `Escrow::can_release()` checks sufficient balance.
+3. **Authorization**: Only authorized parties can modify state. Admin-only ops require `require_admin()`. Role-based access enforced on job creation, evidence submission, milestone approval, and dispute resolution.
+4. **State transitions**: Invalid state transitions are rejected. Every mutation checks current status before allowing transition.
+5. **Dispute isolation**: A disputed milestone's escrow is frozen independently. Only the disputed milestone's amount is frozen.
+6. **Settlement idempotency**: Releasing an already-released milestone returns an error (not a no-op). The contract rejects duplicate releases with `MilestoneAlreadyReleased`.
+7. **Verifier authorization**: Only whitelisted verifiers can attest. `NotWhitelistedVerifier` error returned for unauthorized verifiers.
+8. **Escrow accounting**: `total_funded == total_released + total_frozen + remaining`. `Escrow::remaining()` uses `saturating_sub` to prevent underflow.
+9. **Reputation integrity**: Reputation updates only occur after valid settlement. Score changes are tracked with old/new values in events.
+10. **Duplicate registration prevention**: Each address can only be registered once. `register_user` returns `UserAlreadyRegistered` if the address already exists.
+11. **Input validation**: All string inputs are validated for non-empty, length limits (title: 1-256, description: max 4096). Array lengths must match milestone count.

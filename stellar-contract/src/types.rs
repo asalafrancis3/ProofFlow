@@ -74,7 +74,8 @@ pub enum AttestationOutcome {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct User {
     pub address: Address,
-    pub org_id: Option<Address>,
+    pub org_id: Address,
+    pub has_org: bool,
     pub role: UserRole,
     pub name: String,
     pub registered_at: u64,
@@ -104,9 +105,10 @@ pub struct Milestone {
     pub amount: u128,
     pub status: MilestoneStatus,
     pub worker: Address,
-    pub evidence_uri: Option<String>,
-    pub submitted_at: Option<u64>,
-    pub resolved_at: Option<u64>,
+    pub evidence_uri: String,
+    pub has_evidence: bool,
+    pub submitted_at: u64,
+    pub resolved_at: u64,
 }
 
 #[contracttype]
@@ -150,9 +152,10 @@ pub struct Dispute {
     pub raised_by: Address,
     pub reason: String,
     pub status: DisputeStatus,
-    pub resolution: Option<Resolution>,
+    pub resolution: Resolution,
+    pub has_resolution: bool,
     pub created_at: u64,
-    pub resolved_at: Option<u64>,
+    pub resolved_at: u64,
 }
 
 #[contracttype]
@@ -172,10 +175,7 @@ pub struct Reputation {
 
 impl JobStatus {
     pub fn is_terminal(&self) -> bool {
-        matches!(
-            self,
-            JobStatus::Settled | JobStatus::Cancelled
-        )
+        matches!(self, JobStatus::Settled | JobStatus::Cancelled)
     }
 }
 

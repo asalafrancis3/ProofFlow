@@ -212,7 +212,7 @@ export function SettingsPage() {
       <Section title="Notifications">
         <Row
           label="Transfer notifications"
-          description="Notify when waste is transferred to or from you"
+          description="Notify when milestones are submitted or approved"
         >
           <Switch
             checked={notifPrefs.transfer}
@@ -222,7 +222,7 @@ export function SettingsPage() {
         </Row>
         <Row
           label="Confirmation notifications"
-          description="Notify when waste is confirmed"
+          description="Notify when payments are released"
         >
           <Switch
             checked={notifPrefs.confirmation}

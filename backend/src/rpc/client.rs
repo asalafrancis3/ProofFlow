@@ -73,7 +73,7 @@ impl Default for RetryConfig {
 
 impl RetryConfig {
     /// Calculate delay for attempt `n` using full-jitter exponential backoff.
-    fn delay_for(&self, attempt: u32) -> Duration {
+    pub(crate) fn delay_for(&self, attempt: u32) -> Duration {
         let exp = self.base_delay.as_millis() as f64 * (2_f64.powi(attempt as i32));
         let capped = exp.min(self.max_delay.as_millis() as f64);
         // Full jitter: random in [0, capped]
@@ -232,7 +232,7 @@ impl StellarRpcClient {
     pub fn new(config: StellarRpcConfig) -> Result<Self, anyhow::Error> {
         let http = Client::builder()
             .timeout(config.request_timeout)
-            .user_agent("scavenger-backend/1.0")
+            .user_agent("proofflow-backend/1.0")
             .build()
             .context("Failed to build HTTP client")?;
 
@@ -319,7 +319,8 @@ impl StellarRpcClient {
                         message: body,
                     });
                 }
-                Ok(res.json::<StellarAccount>().await?)
+                let text = res.text().await?;
+                serde_json::from_str::<StellarAccount>(&text).map_err(RpcError::Deserialize)
             }
         })
         .await

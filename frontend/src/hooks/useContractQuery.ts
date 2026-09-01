@@ -59,7 +59,8 @@ export function useContractMutation<TVariables, TData = void>(
           invalidateKeys.map((key) => queryClient.invalidateQueries({ queryKey: key }))
         )
       }
-      restOptions.onSuccess?.(data, variables, context)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(restOptions as any).onSuccess?.(data, variables, context)
     },
     ...restOptions,
   })

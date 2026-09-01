@@ -1,5 +1,5 @@
 [package]
-name = "scavenger-backend"
+name = "proofflow-backend"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
@@ -63,9 +63,9 @@ redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
 wiremock = "0.6"
 
 [lib]
-name = "scavenger_backend"
+name = "proofflow_backend"
 path = "src/lib.rs"
 
 [[bin]]
-name = "scavenger-backend"
+name = "proofflow-backend"
 path = "src/main.rs"

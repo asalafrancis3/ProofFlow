@@ -25,6 +25,10 @@ interface OfflineDBSchema extends DBSchema {
       status: 'pending' | 'syncing' | 'failed' | 'success';
       error?: string;
     };
+    indexes: {
+      status: 'pending' | 'syncing' | 'failed' | 'success';
+      timestamp: number;
+    };
   };
   cache: {
     key: string;
