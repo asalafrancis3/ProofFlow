@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main, test/1133-nft-service-unit-tests]
+  pull_request:
+    branches: [main]
+
+env:
+  RUST_VERSION: "1.96.1"
+  PNPM_VERSION: "10"
+
+jobs:
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Vite build
+        working-directory: frontend
+        run: pnpm exec vite build
+
+      - name: ProofFlow critical tests
+        working-directory: frontend
+        run: pnpm exec vitest run src/__tests__/proofflow.critical.test.tsx
+
+  contract:
+    name: Soroban Contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: stellar-contract -> target
+          shared-key: soroban-contract
+
+      - name: cargo check
+        run: cargo check -p proofflow-contract
+
+      - name: cargo test
+        run: cargo test -p proofflow-contract
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: backend -> target
+          shared-key: proofflow-backend
+
+      - name: cargo check
+        run: cargo check -p proofflow-backend
+
+      - name: cargo test (lib)
+        run: cargo test -p proofflow-backend --lib
